@@ -6,7 +6,9 @@ type BddExpect = {
 };
 
 // Playwright's expect, loosely typed so steps can assert on values kept in the World's untyped stash.
+const configuredExpect = playwrightExpect.configure({ timeout: 15_000 });
+
 export const expect = Object.assign(
-  (actual: any, message?: string) => playwrightExpect(actual, message),
-  { arrayContaining: playwrightExpect.arrayContaining },
+  (actual: any, message?: string) => configuredExpect(actual, message),
+  { arrayContaining: configuredExpect.arrayContaining },
 ) as BddExpect;

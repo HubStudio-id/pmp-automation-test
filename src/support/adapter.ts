@@ -51,7 +51,12 @@ export type Fixtures = PageFixtures;
 export function fixturesFor(page: Page): Fixtures {
   patchPlaywright(page);
   const app = {
-    open: async (url: string) => { await page.goto(url); },
+    open: async (url: string) => {
+      await page.goto(url, { waitUntil: 'domcontentloaded' });
+      // The portals are SPAs: goto() can finish before the app shell and its first API-backed render exist.
+      // Wait for visible document content instead of sleeping, so slow CI runners do not assert on a blank page.
+      await page.waitForFunction(() => Boolean(document.body?.innerText.trim()), undefined, { timeout: 15_000 });
+    },
     screenshot: async () => page.screenshot(),
   };
   const browser = {

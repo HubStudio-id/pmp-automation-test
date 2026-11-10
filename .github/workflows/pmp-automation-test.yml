@@ -1,4 +1,4 @@
-name: PMP regression
+name: PMP Automation Test
 
 on:
   pull_request:
@@ -15,8 +15,8 @@ on:
           - smoke
           - regression
   schedule:
-    # Full regression every Monday at 03:00 WIB (Sunday 20:00 UTC).
-    - cron: '0 20 * * 0'
+    # Full regression every Monday at 02:00 WIB (Sunday 19:00 UTC).
+    - cron: '0 19 * * 0'
 
 concurrency:
   group: pmp-regression-${{ github.ref }}
@@ -100,11 +100,11 @@ jobs:
           fi
 
       # Traces are intentionally excluded: they contain browser storage tokens.
-      - name: Upload safe test reports
+      - name: Upload Test Reports as Artifact
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: pmp-regression-${{ github.run_number }}
+          name: pmp-automation-test-${{ github.run_number }}
           if-no-files-found: warn
           retention-days: 14
           path: |

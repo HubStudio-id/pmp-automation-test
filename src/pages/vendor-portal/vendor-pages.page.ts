@@ -14,6 +14,8 @@ export class VendorDashboardPage extends VendorShell {
 }
 
 export class VendorNegotiationsPage extends VendorShell {
+  async open(): Promise<this> { return this.openUrl(`${urls.vendor}/negotiations`); }
+
   get negotiationCodes() { return this.screen.getByText(/NEG-\d{4}-\d{4}/); }
 
   /**

@@ -2,13 +2,15 @@
 import { Given, When, Then } from '@cucumber/cucumber';
 import { expect } from '../../support/bdd-expect';
 import type { RegressionWorld } from '../../support/world';
-import { VendorDashboardPage, VendorNegotiationRoomPage } from '../../pages';
+import { VendorNegotiationsPage, VendorNegotiationRoomPage } from '../../pages';
 import { data, urls } from '../../testdata';
 import { vendorGet } from '../../utils/vendor-api';
 import { pdfOfSize } from '../../utils/files';
 
 Given("the vendor's first negotiation code is read from «Negosiasi Saya»", async function (this: RegressionWorld) {
-  const negotiations = await (await new VendorDashboardPage(this.f).open()).goToMyNegotiations();
+  // NEG-01 verifies negotiation data, not sidebar navigation. Open the stable list route directly so a menu
+  // collapse/label change cannot mask the cross-portal assertion with a locator timeout.
+  const negotiations = await new VendorNegotiationsPage(this.f).open();
   const [code] = await negotiations.codes();
   expect(code, 'precondition: QA-DIST Distributor A has a negotiation in «Negosiasi Saya»').toBeTruthy();
   this.stash.negotiationCode = code;

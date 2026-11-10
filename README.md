@@ -1,84 +1,211 @@
-# PMP regression (BDD · Cucumber + Playwright)
+# PMP Automation Test
 
-Staging regression for the Admin / Member / Vendor portals of PMP. **The regression runs in Cucumber (BDD)**:
-Gherkin features in `src/features/`, step definitions reusing the page objects in `src/pages`, test data in
-`src/testdata`, Allure reports.
+![Node.js](https://img.shields.io/badge/Node.js-26.12%2B-green)
+![Cucumber](https://img.shields.io/badge/Cucumber-BDD-brightgreen)
+![Playwright](https://img.shields.io/badge/Playwright-Chromium-blue)
+![Allure](https://img.shields.io/badge/Allure-Report-red)
 
-## Setup (once)
-1. Node ≥ 26.12.1 (`node -v`), then `npm install` and `npx playwright install chromium`.
-2. `.env` (mode 600, never committed): fill `QA_PASS_<ROLE>` for the QA accounts you use (empty password = role
-   skipped), and the Gmail API values for the invitation e-mails (`GMAIL_CLIENT_ID`, `GMAIL_CLIENT_SECRET`, then
-   `node tools/gmail-auth.mjs` writes `GMAIL_REFRESH_TOKEN`).
+PMP Automation Test is a pre-release regression suite for the PMP Admin, Vendor, and Member portals. It is built with
+Cucumber BDD, Playwright, TypeScript, and Allure reporting, with GitHub Actions used for CI execution.
 
-## Allure report
+---
 
-The BDD runner writes all output under `reports/`: Cucumber files in `reports/cucumber/`, Allure results in
-`reports/allure-results/`, the generated report in `reports/allure-report/`, and failure traces in `reports/traces/`.
-Run lama yang sebelumnya berada di `results/` disimpan sebagai `reports/legacy-results/` dan tidak dipakai oleh runner baru.
-Use a clean cycle when you want a report for
-one complete run; it clears old results, runs the three rate-limited phases, and still generates the report if a
-phase fails:
+## Project Architecture
+
+- Uses the Page Object Model (POM) to separate UI actions from test scenarios.
+- Uses Gherkin feature files so regression cases remain readable and traceable.
+- Groups features, steps, and page objects by portal: Admin, Vendor, and Member.
+- Reuses authenticated sessions to reduce sign-in rate-limit failures.
+- Keeps test data in `src/testdata/` and credentials in environment variables only.
+- Generates Cucumber and Allure reports for local and CI runs.
+
+---
+
+## Regression Coverage
+
+| Portal | Coverage |
+|:--|:--|
+| **Admin** | Login, roles and access, dashboard, products, vendor registration, contracts, negotiations, templates, tasks, logs, and filters |
+| **Vendor** | Login, vendor registration, activation, products, negotiations, contracts, and invitations |
+| **Member** | Login, account, catalog, cart, notifications, registration, Help Desk, and activation |
+| **Cross-portal** | Vendor-to-Admin negotiation, registration, invitation, and shared business data |
+
+Test cases are organized in `src/features/<portal>/<area>/` and tagged with priority, regression ID, severity, and
+the account session they use.
+
+---
+
+## Setup
+
+Requirements:
+
+- Node.js 26.12.1 or newer
+- npm
+- Chromium dependencies supported by Playwright
+- QA credentials for the staging portals
+
+Install the project:
+
+```bash
+git clone https://github.com/HubStudio-id/pmp-automation-test.git
+cd pmp-automation-test
+npm install
+npx playwright install chromium
+```
+
+Create a local `.env` file with the staging URLs, QA account credentials, API URL, and Gmail API values needed by
+invitation scenarios. Keep the file private with mode `600`; it is ignored by Git and must never be committed.
+
+Prepare or refresh reusable authenticated sessions:
+
+```bash
+npm run bdd:accounts
+npm run bdd:auth
+```
+
+---
+
+## How to Run Tests
+
+Run the smoke suite:
+
+```bash
+npm run bdd:p1
+```
+
+Run the full regression cycle:
+
+```bash
+npm run bdd:all
+```
+
+Run one portal:
+
+```bash
+npm run bdd:admin-portal
+npm run bdd:vendor-portal
+npm run bdd:member-portal
+```
+
+Run one specific scenario by its name:
+
+```bash
+NODE_OPTIONS='--import tsx' npx cucumber-js --profile p1 \
+  --name 'The role page answers «Akses Ditolak»'
+```
+
+Run the validation gate without opening a browser:
+
+```bash
+npm run bdd:check
+```
+
+Run a clean cycle and open the Allure report:
 
 ```bash
 npm run bdd:fresh
 ```
 
-For a single phase, run `npm run bdd`, `npm run bdd:sign-in`, or `npm run bdd:lockout`, then open the current
-results with `npm run bdd:report`. The report title is **PMP - Regression Test Report**. `npm run bdd:all` runs
-all three phases and returns a failing exit code when any phase fails.
+Or build and open the current report separately:
 
-## GitHub Actions
+```bash
+npm run bdd:report
+```
 
-The workflow `.github/workflows/pmp-regression.yml` runs the P1 suite on pull requests and pushes to `main`, and the
-full suite on the weekday schedule. It can also be started manually with `p1` or `all`.
+---
 
-Before the first run, add one repository secret named `PMP_ENV_FILE`. Its value is the complete local `.env` file,
-including the staging URLs, `QA_USER_*`/`QA_PASS_*` accounts, and read-only Gmail API values used by invitation cases.
-Do not commit `.env` or paste its values into the workflow. The CI uploads the Allure and Cucumber reports as a
-14-day artifact; Playwright traces are deliberately excluded because they contain session tokens.
+## Reports
 
-## BDD (Cucumber) — same cases, Gherkin format
+The test runner writes reports under `reports/`:
 
-Feature files in `src/features/<portal>/<area>/<ID>_<what>.feature`, `<portal>` = `admin-portal`, `vendor-portal` or `member-portal`
-(tags `@priority:P1`/`@priority:P2`, `@REG-…`, `@severity:<level>`). A case that checks several portals is split into
-one file per portal with the same `@REG-…` tag (AUTH-02, AUTH-04, KTR-01, MREG-05). A cross-portal
-flow stays one scenario, in the portal whose screen gives the verdict: NEG-01 in `admin`, CAT-06 in
-`member`, VREG-04 in `vendor`.
-Step definitions in `src/steps/<portal>/` follow the portal of the page they drive; portal-neutral steps (texts,
-sign-in page, activation refusal, Help Desk search, letter markers) are in `src/steps/common.steps.ts`. They reuse
-the page objects in `src/pages`. Runner: Cucumber +
-Playwright (Chromium), reports per phase in `reports/cucumber/report-<phase>.html|json` (main, lockout, sign-in, p1, …) plus Allure.
+```text
+reports/
+├── allure-results/     Raw Allure results
+├── allure-report/      Generated Allure HTML report
+├── cucumber/           Cucumber JSON and HTML reports
+└── traces/             Playwright traces for failed scenarios
+```
 
-| Command (VS Code: Terminal › Run Task… › «BDD: …») | Runs |
-|---|---|
-| `npm run bdd:auth` | prepares saved sessions in `.auth/` (reuses valid ones, signs in max 9 per minute) |
-| `npm run bdd:dry` | checks every step has a definition (no browser, no staging) |
-| `npm run bdd:check` | runs TypeScript validation and the Cucumber dry-run gate |
-| `npm run bdd:p1` | P1 sanity (19 scenarios): sessions once, 16 in parallel, then the 3 P1 sign-in form scenarios |
-| `npm run bdd:data-check` | read-only preflight of the staging data the suite needs (contract dates, AX codes, PKS contract, NEG/PO, SKUs); run after `bdd:auth`, before `bdd` |
-| `npm run bdd` | main set, 5 parallel workers (`BDD_WORKERS`; excludes the three groups below) |
-| `npm run bdd:sign-in` | scenarios that sign in through the form |
-| `npm run bdd:lockout` | AUTH-06 |
-| `npm run bdd:admin-portal` · `bdd:vendor-portal` · `bdd:member-portal` | main set of one portal folder |
-| `npm run bdd:all` | every scenario (no lead-only set): sessions once, then main set and lockout at the same time (lockout output in `reports/cucumber/lockout.log`), then the sign-in phase (sign-in form + VREG-04 account creation); prints each phase's time; exit code of the first failing phase |
-| `npm run bdd:fresh` | clears old Allure results, runs all phases, then opens the report |
-| `npm run typecheck` | validates TypeScript without running staging tests |
+The Allure report title is **PMP - Regression Test Report**.
 
-Tags: `@as-<role>` session(s) of the scenario · `@sign-ins-<n>` own sign-ins (paced) · `@empty-cart`,
-`@restore-stock`, `@unlock-lockable`, `@restore-role`, `@archive-invited`, `@archived-admin` data hooks (`src/support/fixtures.ts`) · `@known-bug` open bug red.
-Failed scenarios keep a Playwright trace in `reports/traces/` (steps, DOM, network; mode 600 — it holds session
-tokens, never share it): `npm run bdd:trace -- <file.zip>` or VS Code task «BDD: open a failure trace». `BDD_TRACE=0`
-turns tracing off; scenarios that type a password (`@sign-ins-<n>`) are never traced.
-`HEADED=1 npm run bdd:p1` shows the browser; `BDD_WORKERS=1 npm run bdd` runs one at a time.
+➡️ [Open the latest live Allure Report](https://hubstudio-id.github.io/pmp-automation-test/)
 
-## Structure
+Playwright traces can contain session tokens. Do not commit or share them outside the QA team.
+
+---
+
+## CI/CD
+
+The workflow is defined in `.github/workflows/pmp-automation-test.yml`.
+
+| Trigger | Suite |
+|:--|:--|
+| Pull request | Smoke |
+| Push to `main` | Smoke |
+| Manual trigger | Smoke or Regression |
+| Every Monday at 02:00 WIB | Full Regression |
+
+The pipeline flow is:
+
+```text
+Checkout Repository
+   |
+Setup Node.js
+   |
+Install Dependencies and Chromium
+   |
+Load PMP_ENV_FILE Secret
+   |
+Validate TypeScript and Cucumber Steps
+   |
+Run Smoke or Full Regression
+   |
+Generate Allure and Cucumber Reports
+   |
+Check Generated Allure Report
+   |
+Upload Test Reports as Artifact
+   |
+Upload Report for GitHub Pages
+   |
+Deploy Allure Report to GitHub Pages
+```
+
+Before running CI, create a repository secret named `PMP_ENV_FILE`. Its value must be the complete local `.env` file.
+The workflow creates a temporary `.env` inside the runner; the local `.env` is never used by GitHub Actions.
+
+Do not print, commit, or attach credentials, tokens, invitation links, or Playwright traces.
+
+### Latest workflow status
+
+[![PMP Automation Test](https://github.com/HubStudio-id/pmp-automation-test/actions/workflows/pmp-automation-test.yml/badge.svg)](https://github.com/HubStudio-id/pmp-automation-test/actions/workflows/pmp-automation-test.yml)
+
+---
+
+## Project Structure
 
 ```text
 src/
-  features/   Gherkin scenarios: admin-portal/, vendor-portal/, member-portal/
-  steps/      Cucumber step definitions: admin-portal/, vendor-portal/, member-portal/, common.steps.ts
-  pages/      Page Object Model classes
-  support/    World (typed stash keys), hooks (lifecycle, sessions, evidence), fixtures (data hooks), auth state, adapter
-  utils/      API (base URL from `API_URL`, default in src/testdata/index.ts), environment, e-mail, PDF, file helpers
-  testdata/   JSON data and test files
+├── features/      Gherkin scenarios grouped by portal and area
+├── steps/         Cucumber step definitions grouped by portal
+├── pages/         Playwright Page Object Model classes
+├── support/       World, hooks, sessions, fixtures, and adapter
+├── utils/         API, environment, e-mail, PDF, and file helpers
+└── testdata/      QA test data and test files
+
+tools/             Session, account, data-check, and phase-runner utilities
+reports/           Cucumber, Allure, and failure outputs
+.github/workflows/ GitHub Actions CI workflow
 ```
+
+## Useful Commands
+
+| Command | Purpose |
+|:--|:--|
+| `npm run bdd:auth` | Prepare and reuse saved sessions |
+| `npm run bdd:data-check` | Validate reusable staging fixtures |
+| `npm run bdd:check` | Typecheck and verify Cucumber steps |
+| `npm run bdd:p1` | Run the smoke suite |
+| `npm run bdd:all` | Run the full regression cycle |
+| `npm run bdd:report` | Generate and open Allure |
+| `npm run bdd:trace -- <file.zip>` | Open a failed Playwright trace |
