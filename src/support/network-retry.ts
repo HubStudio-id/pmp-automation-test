@@ -7,12 +7,16 @@
 // The portals do not retry, so each run failed one different scenario. Here:
 //   - static assets (/assets/<name>-<hash>.*) are fetched with retries and kept in memory per worker; the name carries
 //     a content hash, so the cached copy is always the file the page asked for;
-//   - API GETs are fetched with retries and never cached. Other methods go to the network untouched, so a write is
-//     never sent twice. HTTP statuses are passed through as they are: only a reset or timed-out connection is retried.
+//   - API GETs (not login, logout or refresh) are fetched with retries and never cached. Other methods go to the
+//     network untouched, so a write is never sent twice. HTTP statuses are passed through as they are: only a reset or
+//     timed-out connection is retried.
 import type { BrowserContext, Route } from 'playwright';
 
 const ASSET = /^https:\/\/[^/]+\/assets\/[^?#]+\.(?:js|css|woff2?|ttf|svg|png|jpe?g|webp|ico)(?:\?.*)?$/;
-const API = /^https:\/\/[^/]+\/api\//;
+// Auth endpoints are never intercepted: an intercepted request waits for this handler before it leaves the browser,
+// and the portals fire «Keluar» (DELETE …/auth/logout) and navigate away at once, so the navigation cancelled the
+// paused logout before it reached the server and the old token stayed valid (run 42837606128, member AUTH-02).
+const API = (url: URL) => url.pathname.includes('/api/') && !/\/auth\/(login|logout|refresh)\b/.test(url.pathname);
 const ATTEMPTS = 3;
 const cache = new Map<string, { status: number; headers: Record<string, string>; body: Buffer }>();
 
