@@ -12,7 +12,8 @@ import { reserveSignIns } from './sign-in-ledger';
 import { registerFixtureHooks } from './fixtures';
 
 let browser: Browser;
-const TRACE_DIR = 'reports/traces';
+const reportKind = process.env.REPORT_KIND === 'smoke' ? 'smoke' : 'regression';
+const TRACE_DIR = `reports/pmp-${reportKind}/traces`;
 
 BeforeAll(async function () {
   browser = await chromium.launch({ headless: process.env.HEADED !== '1' });

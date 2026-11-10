@@ -10,21 +10,23 @@
 // BDD_PLAIN=1 (set by the phase runner) swaps the progress bar for plain progress, which stays readable when two
 // phases print at once.
 const workers = Number(process.env.BDD_WORKERS ?? 5);
+const reportKind = process.env.REPORT_KIND === 'smoke' ? 'smoke' : 'regression';
+const reportRoot = `reports/pmp-${reportKind}`;
 const formats = (name) => [
   process.env.BDD_PLAIN === '1' ? 'progress' : 'progress-bar',
-  `html:reports/cucumber/report-${name}.html`,
-  `json:reports/cucumber/report-${name}.json`,
+  `html:${reportRoot}/cucumber/report-${name}.html`,
+  `json:${reportRoot}/cucumber/report-${name}.json`,
   'summary',
   'allure-cucumberjs/reporter',
 ];
 const common = {
   paths: ['src/features/**/*.feature'],
   import: ['src/support/**/*.ts', 'src/steps/**/*.ts'],
-  // Allure: every run adds its results (screenshots included) to reports/allure-results; «npm run bdd:report» builds
-  // and opens the report. Clear old results with «npm run bdd:report:clear» before a new regression cycle.
+  // Allure results and Cucumber files stay under the selected suite folder; «npm run bdd:report» builds and opens it.
+  // Clear old results with «npm run bdd:report:clear» before a new regression cycle.
   formatOptions: {
     snippetInterface: 'async-await',
-    resultsDir: 'reports/allure-results',
+    resultsDir: `${reportRoot}/allure-results`,
     labels: [
       // «@priority:P1» → label value «P1» (the reporter keeps the tag text after «@xxx:»).
       { pattern: [/^@priority:(P1|P2)$/], name: 'priority' },

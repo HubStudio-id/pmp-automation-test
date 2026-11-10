@@ -1,6 +1,7 @@
 import { spawn } from 'node:child_process';
 
 const npm = process.platform === 'win32' ? 'npm.cmd' : 'npm';
+process.env.REPORT_KIND = 'regression';
 
 function run(command, args) {
   return new Promise((resolve) => {

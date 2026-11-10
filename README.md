@@ -120,13 +120,13 @@ The test runner writes reports under `reports/`:
 
 ```text
 reports/
-├── allure-results/     Raw Allure results
-├── allure-report/      Generated Allure HTML report
-├── cucumber/           Cucumber JSON and HTML reports
-└── traces/             Playwright traces for failed scenarios
+├── pmp-smoke/          Smoke Allure, Cucumber, and trace outputs
+└── pmp-regression/     Full regression Allure, Cucumber, and trace outputs
 ```
 
-The Allure report title is **PMP - Regression Test Report**.
+The Allure report title follows the run type: **PMP - Smoke Test Report** for `bdd:p1`, and
+**PMP - Regression Test Report** for `bdd:all` and `bdd:fresh`.
+The top-level Allure group is always `pmp`; only the report title and storage folder vary by run type.
 
 ➡️ [Open the latest live Allure Report](https://hubstudio-id.github.io/pmp-automation-test/)
 

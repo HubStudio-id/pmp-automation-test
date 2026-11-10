@@ -6,15 +6,18 @@
 //   runs beside it and its rate-limit wait overlaps the main set.
 // - The sign-in form scenarios sign in and out accounts whose saved sessions the main set uses (admin-config-view,
 //   member-maker), so they start only after the main set has finished.
-// The lockout output goes to reports/cucumber/lockout.log while it runs and is printed after, so the two phases do
+// The lockout output goes to the selected report folder while it runs and is printed after, so the two phases do
 // not interleave on screen. The exit code is the first failing phase's.
 import { spawn } from 'node:child_process';
-import { createWriteStream, mkdirSync, readFileSync } from 'node:fs';
+import { createWriteStream, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 
 const npm = process.platform === 'win32' ? 'npm.cmd' : 'npm';
 const npx = process.platform === 'win32' ? 'npx.cmd' : 'npx';
 const env = { ...process.env, NODE_OPTIONS: `${process.env.NODE_OPTIONS ?? ''} --import tsx`.trim(), BDD_PLAIN: '1' };
-const LOCKOUT_LOG = 'reports/cucumber/lockout.log';
+const isP1 = process.argv.includes('--p1');
+const reportKind = isP1 ? 'smoke' : 'regression';
+const reportRoot = `reports/pmp-${reportKind}`;
+const LOCKOUT_LOG = `${reportRoot}/cucumber/lockout.log`;
 
 function run(command, args, logPath) {
   return new Promise((resolve) => {
@@ -33,11 +36,12 @@ const timed = async (label, promise) => {
   return code;
 };
 
-mkdirSync('reports/cucumber', { recursive: true });
+mkdirSync(`${reportRoot}/cucumber`, { recursive: true });
+writeFileSync('reports/.last-run-kind', `${reportKind}\n`, { mode: 0o600 });
 const auth = await timed('sessions', run(npm, ['run', 'bdd:auth']));
 if (auth !== 0) {
   process.exitCode = auth;
-} else if (process.argv.includes('--p1')) {
+} else if (isP1) {
   const main = await timed('P1 main', cucumber('p1'));
   const signIn = await timed('P1 sign-in form', cucumber('p1signin'));
   process.exitCode = main || signIn;

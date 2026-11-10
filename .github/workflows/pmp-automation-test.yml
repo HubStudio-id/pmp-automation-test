@@ -32,6 +32,8 @@ jobs:
     name: ${{ (inputs.suite || (github.event_name == 'schedule' && 'regression' || 'smoke')) }}
     runs-on: ubuntu-latest
     timeout-minutes: 45
+    env:
+      REPORT_KIND: ${{ inputs.suite || (github.event_name == 'schedule' && 'regression' || 'smoke') }}
     outputs:
       report_ready: ${{ steps.report_status.outputs.ready }}
 
@@ -70,8 +72,7 @@ jobs:
           BDD_PLAIN: '1'
           BDD_TRACE: '0'
         run: |
-          suite="${{ inputs.suite || (github.event_name == 'schedule' && 'regression' || 'smoke') }}"
-          if [ "$suite" = "regression" ]; then
+          if [ "$REPORT_KIND" = "regression" ]; then
             npm run bdd:all
           else
             npm run bdd:p1
@@ -80,11 +81,8 @@ jobs:
       - name: Generate Allure report
         if: always()
         run: |
-          if find reports/allure-results -type f -name '*-result.json' -print -quit 2>/dev/null | grep -q .; then
-            npx allure generate reports/allure-results \
-              --output reports/allure-report \
-              --clean \
-              --name 'PMP - Regression Test Report'
+          if find "reports/pmp-${REPORT_KIND}/allure-results" -type f -name '*-result.json' -print -quit 2>/dev/null | grep -q .; then
+            node tools/generate-allure-report.mjs
           else
             echo 'No Allure result files were produced.'
           fi
@@ -93,7 +91,7 @@ jobs:
         id: report_status
         if: always()
         run: |
-          if test -f reports/allure-report/index.html; then
+          if test -f "reports/pmp-${REPORT_KIND}/allure-report/index.html"; then
             echo 'ready=true' >> "$GITHUB_OUTPUT"
           else
             echo 'ready=false' >> "$GITHUB_OUTPUT"
@@ -108,14 +106,16 @@ jobs:
           if-no-files-found: warn
           retention-days: 14
           path: |
-            reports/allure-report/
-            reports/cucumber/
+            reports/pmp-smoke/allure-report/
+            reports/pmp-smoke/cucumber/
+            reports/pmp-regression/allure-report/
+            reports/pmp-regression/cucumber/
 
       - name: Upload report for GitHub Pages
         if: always() && steps.report_status.outputs.ready == 'true'
         uses: actions/upload-pages-artifact@v3
         with:
-          path: reports/allure-report
+          path: reports/pmp-${{ inputs.suite || (github.event_name == 'schedule' && 'regression' || 'smoke') }}/allure-report
 
   publish-report:
     name: Publish Allure report
