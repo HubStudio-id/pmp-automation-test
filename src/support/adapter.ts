@@ -52,7 +52,14 @@ export function fixturesFor(page: Page): Fixtures {
   patchPlaywright(page);
   const app = {
     open: async (url: string) => {
-      await page.goto(url, { waitUntil: 'domcontentloaded' });
+      try {
+        await page.goto(url, { waitUntil: 'domcontentloaded' });
+      } catch (error) {
+        // On a slow staging response Playwright can hit its navigation timeout while the page is still usable.
+        // Continue so page objects can wait for the actual UI state; always rethrow a closed-page/navigation error.
+        const timedOut = error instanceof Error && /Timeout/i.test(error.message);
+        if (!timedOut || page.isClosed()) throw error;
+      }
       // The portals are SPAs: goto() can finish before the app shell and its first API-backed render exist.
       // Wait for visible document content instead of sleeping, so slow CI runners do not assert on a blank page.
       // Some API-only steps open the portal only to use its authenticated browser context. They do not need a rendered

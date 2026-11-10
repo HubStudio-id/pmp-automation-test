@@ -44,10 +44,9 @@ export class OperationalStandardsPage extends AdminShell {
 /** Konfigurasi › Template Dokumen. Nothing is uploaded or archived: tests only read the offered actions. */
 export class DocumentTemplatesPage extends AdminShell {
   async open(): Promise<this> {
-    await Promise.all([
-      this.browser.waitForResponse(/\/api\/v1\/admin\/document-templates(\?|$)/),
-      this.openUrl(`${urls.admin}/configuration/document-templates`),
-    ]);
+    // The page can receive the API response before a response listener is attached on a slow SPA navigation.
+    // The table state below is the user-visible readiness signal and avoids a response-listener race.
+    await this.openUrl(`${urls.admin}/configuration/document-templates`);
     return this.waitForTableLoaded();
   }
   get pageHeading() { return this.heading('Template Dokumen'); }
