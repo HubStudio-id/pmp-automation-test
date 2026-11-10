@@ -5,9 +5,13 @@ export const CART_API = /\/api\/v1\/member\/cart/;
 
 /** Keranjang. Tests never submit the cart; lines they add are removed again. */
 export class CartPage extends MemberShell {
+  get cartButton() { return this.screen.getByRole('button', { name: /^Keranjang \d+ item/ }); }
+
   /** Opens the cart from any member page through the header button and waits until the cart has rendered. */
   async openFromCurrentPage(): Promise<this> {
-    await this.screen.getByRole('button', { name: /^Keranjang \d+ item/ }).tap();
+    // The catalog shell and its cart count are API-backed; wait for the header before clicking it.
+    await this.cartButton.waitFor({ timeout: 30_000 });
+    await this.cartButton.tap();
     await this.browser.waitForURL(/\/cart$/);
     await this.autosaveStatus.or(this.emptyCartMessage).first().waitFor();
     return this;
