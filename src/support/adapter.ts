@@ -62,9 +62,15 @@ export function fixturesFor(page: Page): Fixtures {
       }
       // The portals are SPAs: goto() can finish before the app shell and its first API-backed render exist.
       // Wait for visible document content instead of sleeping, so slow CI runners do not assert on a blank page.
+      // On CI the SPA sometimes stays blank for good (runs 42794334107 VREG-02, 42830217906 DASH-01: a blank screenshot
+      // after 30 s), and only a new load brings it up, so a page still blank after 15 s is loaded once more.
       // Some API-only steps open the portal only to use its authenticated browser context. They do not need a rendered
-      // shell, so a blank/slow SPA must not fail the setup before the API request can run.
-      await page.waitForFunction(() => Boolean(document.body?.innerText.trim()), undefined, { timeout: 15_000 }).catch(() => undefined);
+      // shell, so a page that stays blank must not fail the setup before the API request can run.
+      const rendered = () => page.waitForFunction(() => Boolean(document.body?.innerText.trim()), undefined, { timeout: 15_000 }).then(() => true, () => false);
+      if (await rendered() || page.isClosed()) return;
+      console.warn(`[app.open] ${new URL(url).pathname} stayed blank for 15 s; loading it once more`);
+      await page.goto(url, { waitUntil: 'domcontentloaded' }).catch(() => undefined);
+      await rendered();
     },
     screenshot: async () => page.screenshot(),
   };

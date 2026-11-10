@@ -50,7 +50,7 @@ async function emptyCart(world: RegressionWorld) {
   try {
     await (await new CartPage(world.f).openFromHeader()).removeAllLines();
   } catch (error) {
-    const detail = `URL: ${world.page.url()}\nLast API answers:\n${world.apiLog.slice(-25).join('\n')}`;
+    const detail = `URL: ${world.page.url()}\nLast requests:\n${world.apiLog.slice(-25).join('\n')}`;
     throw new Error(`fixture: emptying the member cart failed: ${(error as Error).message}\n${detail}`, { cause: error });
   }
 }
