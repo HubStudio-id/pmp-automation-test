@@ -21,6 +21,27 @@ Cucumber BDD, Playwright, TypeScript, and Allure reporting, with GitHub Actions 
 
 ---
 
+## Project Structure
+
+```text
+pmp/
+├── .github/                          GitHub Actions workflow
+├── src/                              Source code automation
+│   ├── features/                     Gherkin scenarios
+│   ├── steps/                        Cucumber step definitions
+│   ├── pages/                        Playwright Page Object Models
+│   ├── support/                      World, hooks, fixtures, and runtime adapter
+│   ├── utils/                        API and general-purpose helpers
+│   ├── testdata/                     Test data and supporting files
+│   └── types/                        TypeScript declarations
+├── tools/                            Runner, account, auth, and report utilities
+└── reports/                          Generated test reports
+    ├── pmp-regression/               Full regression report output
+    └── pmp-smoke/                    Smoke test report output
+```
+
+---
+
 ## Regression Coverage
 
 | Portal | Coverage |
@@ -35,6 +56,52 @@ the account session they use.
 
 ---
 
+## CI/CD
+
+The workflow is defined in `.github/workflows/pmp-automation-test.yml`.
+
+| Trigger | Suite |
+|:--|:--|
+| Pull request | Smoke |
+| Push to `main` | Smoke |
+| Manual trigger | Smoke or Regression |
+| Every Monday at 02:00 WIB | Full Regression |
+
+The pipeline flow is:
+
+```text
+Checkout Repository
+   |
+Setup Node.js
+   |
+Install Dependencies and Chromium
+   |
+Load PMP_ENV_FILE Secret
+   |
+Validate TypeScript and Cucumber Steps
+   |
+Run Smoke or Full Regression
+   |
+Generate Allure and Cucumber Reports
+   |
+Check Generated Allure Report
+   |
+Upload Test Reports as Artifact
+   |
+Upload Report for GitHub Pages
+   |
+Deploy Allure Report to GitHub Pages
+```
+
+Add a repository secret named `PMP_ENV_FILE` containing the full `.env` content. GitHub Actions creates a temporary
+`.env` on the runner. Keep credentials, tokens, invitation links, and Playwright traces private.
+
+### Latest Execution Status
+
+[![PMP Automation Test](https://github.com/HubStudio-id/pmp-automation-test/actions/workflows/pmp-automation-test.yml/badge.svg)](https://github.com/HubStudio-id/pmp-automation-test/actions/workflows/pmp-automation-test.yml)
+
+---
+
 ## How to Setup
 
 Requirements:
@@ -42,7 +109,6 @@ Requirements:
 - Node.js 26.12.1 or newer
 - npm
 - Chromium dependencies supported by Playwright
-- QA credentials for the staging portals
 
 Install the project:
 
@@ -53,8 +119,13 @@ npm install
 npx playwright install chromium
 ```
 
-Create a local `.env` file with the staging URLs, QA account credentials, API URL, and Gmail API values needed by
-invitation scenarios. Keep the file private with mode `600`; it is ignored by Git and must never be committed.
+Create a local `.env` file from the committed template, then fill in the approved QA credentials and Gmail API values
+needed by invitation scenarios. Keep the file private with mode `600`; it is ignored by Git and must never be committed.
+
+```bash
+cp .env.example .env
+chmod 600 .env
+```
 
 Prepare or refresh reusable authenticated sessions:
 
@@ -114,83 +185,6 @@ npm run bdd:report
 
 ---
 
-## Reports
+## Test Reports
 
-The test runner writes reports under `reports/`:
-
-```text
-reports/
-├── pmp-smoke/          Smoke Allure, Cucumber, and trace outputs
-└── pmp-regression/     Full regression Allure, Cucumber, and trace outputs
-```
-
-
-➡️ [Open the latest live Allure Report](https://hubstudio-id.github.io/pmp-automation-test/)
-
-Playwright traces can contain session tokens. Do not commit or share them outside the QA team.
-
----
-
-## CI/CD
-
-The workflow is defined in `.github/workflows/pmp-automation-test.yml`.
-
-| Trigger | Suite |
-|:--|:--|
-| Pull request | Smoke |
-| Push to `main` | Smoke |
-| Manual trigger | Smoke or Regression |
-| Every Monday at 02:00 WIB | Full Regression |
-
-The pipeline flow is:
-
-```text
-Checkout Repository
-   |
-Setup Node.js
-   |
-Install Dependencies and Chromium
-   |
-Load PMP_ENV_FILE Secret
-   |
-Validate TypeScript and Cucumber Steps
-   |
-Run Smoke or Full Regression
-   |
-Generate Allure and Cucumber Reports
-   |
-Check Generated Allure Report
-   |
-Upload Test Reports as Artifact
-   |
-Upload Report for GitHub Pages
-   |
-Deploy Allure Report to GitHub Pages
-```
-
-Before running CI, create a repository secret named `PMP_ENV_FILE`. Its value must be the complete local `.env` file.
-The workflow creates a temporary `.env` inside the runner; the local `.env` is never used by GitHub Actions.
-
-Do not print, commit, or attach credentials, tokens, invitation links, or Playwright traces.
-
-### Latest workflow status
-
-[![PMP Automation Test](https://github.com/HubStudio-id/pmp-automation-test/actions/workflows/pmp-automation-test.yml/badge.svg)](https://github.com/HubStudio-id/pmp-automation-test/actions/workflows/pmp-automation-test.yml)
-
----
-
-## Project Structure
-
-```text
-src/
-├── features/      Gherkin scenarios grouped by portal and area
-├── steps/         Cucumber step definitions grouped by portal
-├── pages/         Playwright Page Object Model classes
-├── support/       World, hooks, sessions, fixtures, and adapter
-├── utils/         API, environment, e-mail, PDF, and file helpers
-└── testdata/      QA test data and test files
-
-tools/             Session, account, data-check, and phase-runner utilities
-reports/           Cucumber, Allure, and failure outputs
-.github/workflows/ GitHub Actions CI workflow
-```
+➡️ [Click here to see the latest live Allure Report](https://hubstudio-id.github.io/pmp-automation-test/)
