@@ -17,9 +17,15 @@ export class CartPage extends MemberShell {
     return this;
   }
 
-  /** Opens the catalog first, then the cart (a direct /cart load can show the cart empty). */
+  /**
+   * Opens the catalog first, then the cart (a direct /cart load can show the cart empty). Used by the @empty-cart
+   * clean-up: the header count waits on delivery-points → cart, and on CI that chain sometimes never renders the
+   * count (run 42827429518, 10 Nov 2026), so the catalog is loaded once more before giving up.
+   */
   async openFromHeader(): Promise<this> {
     await this.app.open(`${urls.member}/catalog`);
+    const shown = await this.cartButton.waitFor({ timeout: 15_000 }).then(() => true, () => false);
+    if (!shown) await this.app.open(`${urls.member}/catalog`);
     return this.openFromCurrentPage();
   }
   get pageHeading() { return this.heading('Keranjang'); }
@@ -60,7 +66,12 @@ export class CartPage extends MemberShell {
     await this.citoDialog.getByRole('textbox').first().fill(condition);
     return this;
   }
-  async saveCito(): Promise<this> { await this.saveCitoButton.tap(); return this; }
+  /** Saves the label and waits until the cart API has stored it and the dialog has closed. */
+  async saveCito(): Promise<this> {
+    await Promise.all([this.browser.waitForResponse(CART_API), this.saveCitoButton.tap()]);
+    await this.citoDialog.waitFor({ state: 'hidden' });
+    return this;
+  }
 
   /** Removes every line, one at a time, waiting after each for the cart API and the re-rendered cart. */
   async removeAllLines(): Promise<this> {

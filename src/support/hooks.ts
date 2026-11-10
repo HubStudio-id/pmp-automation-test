@@ -36,6 +36,12 @@ Before(async function (this: RegressionWorld, { pickle }) {
   });
   this.page = await this.context.newPage();
   this.f = fixturesFor(this.page);
+  // CI runs without traces (they hold tokens), so keep a small API log that clean-up errors can print (fixtures.ts).
+  const started = Date.now();
+  const logApi = (line: string) => { this.apiLog.push(`${Date.now() - started} ms ${line}`); if (this.apiLog.length > 40) this.apiLog.shift(); };
+  const apiPath = (url: string) => { const { pathname } = new URL(url); return pathname.includes('/api/') ? pathname : undefined; };
+  this.page.on('response', (r) => { const path = apiPath(r.url()); if (path) logApi(`${r.status()} ${r.request().method()} ${path}`); });
+  this.page.on('requestfailed', (r) => { const path = apiPath(r.url()); if (path) logApi(`FAILED ${r.method()} ${path} (${r.failure()?.errorText})`); });
   // Playwright trace (steps, DOM snapshots, network) for debugging failures. Not for scenarios that type a password
   // themselves (@sign-ins-<n>): a trace records typed values. BDD_TRACE=0 turns tracing off.
   this.tracing = process.env.BDD_TRACE !== '0' && !signIns;

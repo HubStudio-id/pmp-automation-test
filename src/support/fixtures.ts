@@ -47,7 +47,12 @@ const CLEANUP_ROLE = 'admin-super';
 const ARCHIVABLE_ADMIN = `/admin/admins/${data.admin.archivableAdminSlug}`;
 
 async function emptyCart(world: RegressionWorld) {
-  await (await new CartPage(world.f).openFromHeader()).removeAllLines();
+  try {
+    await (await new CartPage(world.f).openFromHeader()).removeAllLines();
+  } catch (error) {
+    const detail = `URL: ${world.page.url()}\nLast API answers:\n${world.apiLog.slice(-25).join('\n')}`;
+    throw new Error(`fixture: emptying the member cart failed: ${(error as Error).message}\n${detail}`, { cause: error });
+  }
 }
 async function restoreStock(world: RegressionWorld) {
   await (await new VendorProductsPage(world.f).open()).ensureAvailableInList(data.stockFlag.productName);
