@@ -35,7 +35,10 @@ const common = {
       { pattern: [/^@severity:(blocker|critical|normal|minor|trivial)$/], name: 'severity' },
     ],
   },
-  retry: 0,
+  // BDD_RETRY=1 (set in CI) runs a failed scenario once more: GitHub runners reach staging over a connection that the
+  // server sometimes resets (see src/support/network-retry.ts). A scenario that passes on its retry is reported as
+  // flaky, not hidden. The lockout profile never retries: a second attempt would type five more wrong passwords.
+  retry: Number(process.env.BDD_RETRY ?? 0),
 };
 
 // Every scenario is automated and runs in bdd:all; there is no lead-only set. BDD_EXCLUDE drops tags from every
@@ -52,7 +55,7 @@ export default { ...common, format: formats('main'), tags: exclude(MAIN), parall
 export const p1 = { ...common, format: formats('p1'), tags: exclude(`@priority:P1 and ${MAIN}`), parallel: workers };
 export const p1signin = { ...common, format: formats('p1-sign-in'), tags: exclude(`@priority:P1 and (${SIGN_IN})`), parallel: 1 };
 export const signin = { ...common, format: formats('sign-in'), tags: exclude(SIGN_IN), parallel: 1 };
-export const lockout = { ...common, format: formats('lockout'), tags: exclude('@sign-in-lockout'), parallel: 1 };
+export const lockout = { ...common, format: formats('lockout'), tags: exclude('@sign-in-lockout'), parallel: 1, retry: 0 };
 
 // One portal only (src/features/<portal-portal>/): same filter and workers as the main set. Cross-portal cases sit
 // with the portal whose screen gives the final verdict (e.g. CAT-06 in member-portal,
