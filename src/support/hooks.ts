@@ -10,6 +10,7 @@ import { fixturesFor } from './adapter';
 import { mergedState, statePath } from './auth-state';
 import { reserveSignIns } from './sign-in-ledger';
 import { registerFixtureHooks } from './fixtures';
+import { retryStaticAssets } from './static-assets';
 
 let browser: Browser;
 const reportKind = process.env.REPORT_KIND === 'smoke' ? 'smoke' : 'regression';
@@ -34,6 +35,7 @@ Before(async function (this: RegressionWorld, { pickle }) {
     storageState: roles.length ? mergedState(roles) : undefined,
     viewport: { width: 1280, height: 720 },
   });
+  await retryStaticAssets(this.context);
   this.page = await this.context.newPage();
   this.f = fixturesFor(this.page);
   // CI runs without traces (they hold tokens), so keep a small API log that clean-up errors can print (fixtures.ts).
