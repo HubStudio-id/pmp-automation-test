@@ -71,6 +71,8 @@ jobs:
         env:
           BDD_PLAIN: '1'
           BDD_TRACE: '0'
+          # Retry a failed scenario once: the runner's connection to staging is sometimes reset (cucumber.mjs).
+          BDD_RETRY: '1'
         run: |
           if [ "$REPORT_KIND" = "regression" ]; then
             npm run bdd:all

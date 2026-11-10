@@ -95,6 +95,8 @@ export class RegressionWorld extends World {
    * StashKey so a misspelt key is a type error instead of a silent «undefined»; add the key there when a step needs one.
    */
   stash: Partial<Record<StashKey, any>> = {};
+  /** Last API answers and failed loads of the scenario («ms status METHOD host/path», no query, headers or bodies). */
+  apiLog: string[] = [];
   /** True when this scenario records a Playwright trace (kept only if it fails). */
   tracing = false;
   /** Records the scenario created that the After hooks must clean up. */

@@ -19,6 +19,7 @@ import { CartPage, VendorProductsPage, AdminDetailPage } from '../pages';
 import { adminRequest, adminUploadTemplateVersion } from '../utils/admin-api';
 import { vendorGet, vendorRequest } from '../utils/vendor-api';
 import { freeVersionLabel } from '../utils/docx';
+import { retryResetConnections } from './network-retry';
 
 const DRAFT_DOCUMENTS = '/vendor/registration-draft/required-documents';
 const BASELINE = data.vendorWizard.baselineDocument as { ruleSlug: string; name: string };
@@ -47,7 +48,12 @@ const CLEANUP_ROLE = 'admin-super';
 const ARCHIVABLE_ADMIN = `/admin/admins/${data.admin.archivableAdminSlug}`;
 
 async function emptyCart(world: RegressionWorld) {
-  await (await new CartPage(world.f).openFromHeader()).removeAllLines();
+  try {
+    await (await new CartPage(world.f).openFromHeader()).removeAllLines();
+  } catch (error) {
+    const detail = `URL: ${world.page.url()}\nLast requests:\n${world.apiLog.slice(-25).join('\n')}`;
+    throw new Error(`fixture: emptying the member cart failed: ${(error as Error).message}\n${detail}`, { cause: error });
+  }
 }
 async function restoreStock(world: RegressionWorld) {
   await (await new VendorProductsPage(world.f).open()).ensureAvailableInList(data.stockFlag.productName);
@@ -65,6 +71,7 @@ async function withAdminFixtures(world: RegressionWorld, browser: Browser, actio
   if (!pageIsUsable) {
     if (!existsSync(statePath(CLEANUP_ROLE))) throw new Error(`clean-up needs the saved session ${CLEANUP_ROLE}: run «npm run bdd:auth» first`);
     context = await browser.newContext({ storageState: mergedState([CLEANUP_ROLE]), viewport: { width: 1280, height: 720 } });
+    await retryResetConnections(context);
     fixtures = fixturesFor(await context.newPage());
   }
   try {

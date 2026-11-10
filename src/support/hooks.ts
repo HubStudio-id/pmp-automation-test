@@ -10,6 +10,7 @@ import { fixturesFor } from './adapter';
 import { mergedState, statePath } from './auth-state';
 import { reserveSignIns } from './sign-in-ledger';
 import { registerFixtureHooks } from './fixtures';
+import { retryResetConnections } from './network-retry';
 
 let browser: Browser;
 const reportKind = process.env.REPORT_KIND === 'smoke' ? 'smoke' : 'regression';
@@ -34,8 +35,18 @@ Before(async function (this: RegressionWorld, { pickle }) {
     storageState: roles.length ? mergedState(roles) : undefined,
     viewport: { width: 1280, height: 720 },
   });
+  await retryResetConnections(this.context);
   this.page = await this.context.newPage();
   this.f = fixturesFor(this.page);
+  // CI runs without traces (they hold tokens), so keep a small API log that clean-up errors can print (fixtures.ts).
+  const started = Date.now();
+  const logApi = (line: string) => { this.apiLog.push(`${Date.now() - started} ms ${line}`); if (this.apiLog.length > 40) this.apiLog.shift(); };
+  // API answers by path, plus any failed or 4xx/5xx script, style or document load (a blank SPA has no API answers).
+  const pathOf = (url: string) => { const { host, pathname } = new URL(url); return `${host}${pathname}`; };
+  this.page.on('response', (r) => {
+    if (r.url().includes('/api/') || r.status() >= 400) logApi(`${r.status()} ${r.request().method()} ${pathOf(r.url())}`);
+  });
+  this.page.on('requestfailed', (r) => { logApi(`FAILED ${r.method()} ${pathOf(r.url())} (${r.failure()?.errorText})`); });
   // Playwright trace (steps, DOM snapshots, network) for debugging failures. Not for scenarios that type a password
   // themselves (@sign-ins-<n>): a trace records typed values. BDD_TRACE=0 turns tracing off.
   this.tracing = process.env.BDD_TRACE !== '0' && !signIns;
@@ -53,7 +64,7 @@ After(async function (this: RegressionWorld, { pickle, result }) {
   const screenshot = await this.page.screenshot({ fullPage: true });
   this.attach(screenshot, 'image/png');
   const failed = result?.status === Status.FAILED;
-  if (failed) this.attach(`URL at failure: ${this.page.url()}`, 'text/plain');
+  if (failed) this.attach(`URL at failure: ${this.page.url()}\nLast requests:\n${this.apiLog.slice(-25).join('\n')}`, 'text/plain');
   if (!this.tracing) return;
   if (!failed) { await this.context.tracing.stop(); return; }
   // Kept only for failures. The trace holds request headers (Bearer tokens) and page data: mode 600, never share it.

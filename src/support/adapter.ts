@@ -52,19 +52,35 @@ export function fixturesFor(page: Page): Fixtures {
   patchPlaywright(page);
   const app = {
     open: async (url: string) => {
-      try {
-        await page.goto(url, { waitUntil: 'domcontentloaded' });
-      } catch (error) {
-        // On a slow staging response Playwright can hit its navigation timeout while the page is still usable.
-        // Continue so page objects can wait for the actual UI state; always rethrow a closed-page/navigation error.
-        const timedOut = error instanceof Error && /Timeout/i.test(error.message);
-        if (!timedOut || page.isClosed()) throw error;
+      // A reset connection on the document itself (run 42835048215: «page.goto: net::ERR_CONNECTION_RESET») is loaded
+      // again, at most twice; see network-retry.ts for the resets of assets and API GETs.
+      for (let attempt = 1; ; attempt++) {
+        try {
+          await page.goto(url, { waitUntil: 'domcontentloaded' });
+          break;
+        } catch (error) {
+          const message = error instanceof Error ? error.message : '';
+          if (/net::ERR_(CONNECTION_RESET|CONNECTION_CLOSED|EMPTY_RESPONSE)/.test(message) && attempt < 3 && !page.isClosed()) {
+            console.warn(`[app.open] ${new URL(url).pathname}: ${message.split('\n')[0]}; loading it again`);
+            continue;
+          }
+          // On a slow staging response Playwright can hit its navigation timeout while the page is still usable.
+          // Continue so page objects can wait for the actual UI state; always rethrow a closed-page/navigation error.
+          if (!/Timeout/i.test(message) || page.isClosed()) throw error;
+          break;
+        }
       }
       // The portals are SPAs: goto() can finish before the app shell and its first API-backed render exist.
       // Wait for visible document content instead of sleeping, so slow CI runners do not assert on a blank page.
+      // On CI the SPA sometimes stays blank for good (runs 42794334107 VREG-02, 42830217906 DASH-01: a blank screenshot
+      // after 30 s), and only a new load brings it up, so a page still blank after 15 s is loaded once more.
       // Some API-only steps open the portal only to use its authenticated browser context. They do not need a rendered
-      // shell, so a blank/slow SPA must not fail the setup before the API request can run.
-      await page.waitForFunction(() => Boolean(document.body?.innerText.trim()), undefined, { timeout: 15_000 }).catch(() => undefined);
+      // shell, so a page that stays blank must not fail the setup before the API request can run.
+      const rendered = () => page.waitForFunction(() => Boolean(document.body?.innerText.trim()), undefined, { timeout: 15_000 }).then(() => true, () => false);
+      if (await rendered() || page.isClosed()) return;
+      console.warn(`[app.open] ${new URL(url).pathname} stayed blank for 15 s; loading it once more`);
+      await page.goto(url, { waitUntil: 'domcontentloaded' }).catch(() => undefined);
+      await rendered();
     },
     screenshot: async () => page.screenshot(),
   };
