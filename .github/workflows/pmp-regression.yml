@@ -1,0 +1,134 @@
+name: PMP regression
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      suite:
+        description: Test suite to run
+        required: true
+        default: smoke
+        type: choice
+        options:
+          - smoke
+          - regression
+  schedule:
+    # Full regression every Monday at 03:00 WIB (Sunday 20:00 UTC).
+    - cron: '0 20 * * 0'
+
+concurrency:
+  group: pmp-regression-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+jobs:
+  regression:
+    name: ${{ (inputs.suite || (github.event_name == 'schedule' && 'regression' || 'smoke')) }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    outputs:
+      report_ready: ${{ steps.report_status.outputs.ready }}
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 26.13.0
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Chromium
+        run: npx playwright install --with-deps chromium
+
+      - name: Write CI environment
+        env:
+          PMP_ENV_FILE: ${{ secrets.PMP_ENV_FILE }}
+        run: |
+          test -n "$PMP_ENV_FILE" || {
+            echo 'Missing GitHub Actions secret: PMP_ENV_FILE' >&2
+            exit 1
+          }
+          printf '%s\n' "$PMP_ENV_FILE" > .env
+          chmod 600 .env
+
+      - name: Validate test suite
+        run: npm run bdd:check
+
+      - name: Run regression
+        env:
+          BDD_PLAIN: '1'
+          BDD_TRACE: '0'
+        run: |
+          suite="${{ inputs.suite || (github.event_name == 'schedule' && 'regression' || 'smoke') }}"
+          if [ "$suite" = "regression" ]; then
+            npm run bdd:all
+          else
+            npm run bdd:p1
+          fi
+
+      - name: Generate Allure report
+        if: always()
+        run: |
+          if find reports/allure-results -type f -name '*-result.json' -print -quit 2>/dev/null | grep -q .; then
+            npx allure generate reports/allure-results \
+              --output reports/allure-report \
+              --clean \
+              --name 'PMP - Regression Test Report'
+          else
+            echo 'No Allure result files were produced.'
+          fi
+
+      - name: Check generated Allure report
+        id: report_status
+        if: always()
+        run: |
+          if test -f reports/allure-report/index.html; then
+            echo 'ready=true' >> "$GITHUB_OUTPUT"
+          else
+            echo 'ready=false' >> "$GITHUB_OUTPUT"
+          fi
+
+      # Traces are intentionally excluded: they contain browser storage tokens.
+      - name: Upload safe test reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: pmp-regression-${{ github.run_number }}
+          if-no-files-found: warn
+          retention-days: 14
+          path: |
+            reports/allure-report/
+            reports/cucumber/
+
+      - name: Upload report for GitHub Pages
+        if: always() && steps.report_status.outputs.ready == 'true'
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: reports/allure-report
+
+  publish-report:
+    name: Publish Allure report
+    needs: regression
+    if: always() && needs.regression.result != 'cancelled' && needs.regression.outputs.report_ready == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

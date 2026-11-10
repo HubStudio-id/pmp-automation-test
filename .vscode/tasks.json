@@ -1,0 +1,77 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "BDD: prepare sessions",
+      "type": "npm",
+      "script": "bdd:auth",
+      "problemMatcher": []
+    },
+    {
+      "label": "BDD: check steps (dry run)",
+      "type": "npm",
+      "script": "bdd:dry",
+      "problemMatcher": []
+    },
+    {
+      "label": "BDD: P1 sanity",
+      "type": "npm",
+      "script": "bdd:p1",
+      "problemMatcher": []
+    },
+    {
+      "label": "BDD: main set (P1 + P2)",
+      "type": "npm",
+      "script": "bdd",
+      "problemMatcher": []
+    },
+    {
+      "label": "BDD: sign-in form scenarios",
+      "type": "npm",
+      "script": "bdd:sign-in",
+      "problemMatcher": []
+    },
+    {
+      "label": "BDD: lockout (AUTH-06)",
+      "type": "npm",
+      "script": "bdd:lockout",
+      "problemMatcher": []
+    },
+    {
+      "label": "BDD: everything (all phases)",
+      "type": "npm",
+      "script": "bdd:all",
+      "problemMatcher": []
+    },
+    {
+      "label": "BDD: current feature file",
+      "type": "shell",
+      "command": "npm run bdd:auth && NODE_OPTIONS='--import tsx' npx cucumber-js '${relativeFile}'",
+      "problemMatcher": []
+    },
+    {
+      "label": "BDD: Allure report (build + open)",
+      "type": "npm",
+      "script": "bdd:report",
+      "problemMatcher": []
+    },
+    {
+      "label": "BDD: clear Allure results",
+      "type": "npm",
+      "script": "bdd:report:clear",
+      "problemMatcher": []
+    },
+    {
+      "label": "BDD: fresh cycle (clear, run all, open Allure)",
+      "type": "npm",
+      "script": "bdd:fresh",
+      "problemMatcher": []
+    },
+    {
+      "label": "BDD: open a failure trace",
+      "type": "shell",
+      "command": "npx playwright show-trace \"$(ls -t reports/traces/*.zip | head -1)\"",
+      "problemMatcher": []
+    }
+  ]
+}

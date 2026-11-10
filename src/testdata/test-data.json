@@ -1,0 +1,296 @@
+{
+  "_comment": "Staging test data used by the regression tests. Change values here, not in the tests. Accounts live in .env (QA_USER_<ROLE>); this file only names the role handles and the QA records the tests read.",
+  "admin": {
+    "superAdminSlug": "qa-auto-super-admin",
+    "roleGgAdminDisplayName": "QA-AUTO Konfigurasi Lihat",
+    "_roleGgAdminDisplayNameNote": "Display name of the admin-config-view account (qa+auto-config@, Role GG); AUTH-01 opens the header account menu by it to sign out. Was «Admin Config» (qa+konfigurasi@) before 6 Nov 2026.",
+    "roleForEditorCheck": "admin-finance",
+    "productWithoutTypeAuthority": "QA-PMP-517-BMHP-02",
+    "transferConfirmationWrongEmail": "regression-wrong@hubstudio.id",
+    "promotionTargetSlug": "admin-procurement-test",
+    "_promotionTargetNote": "qa+procurement@ (no other test uses it): ROLE-09 reads its «Peran» list (read-only since 10 Nov 2026: «Super Admin» is not a role and is never offered).",
+    "lockableAdminEmail": "qa+lock@hubstudio.id",
+    "lockableAdminSlug": "qa-regression-lockable",
+    "archivableAdminEmail": "qa+auto-archive@hubstudio.id",
+    "archivableAdminName": "QA-AUTO Arsip Pulih",
+    "archivableAdminSlug": "qa-auto-arsip-pulih",
+    "_archivableAdminNote": "Owned by LOG-01 only (@archived-admin): archived before the scenario so its log row is restorable, restored after. Created by the lead with npm run bdd:accounts (10 Nov 2026).",
+    "archiveReason": "QA regression LOG-01 fixture: archived so the log offers Pulihkan",
+    "legalAdminEmail": "qa+auto-legal@hubstudio.id",
+    "_legalAdminNote": "ROLE-11 (PMP-726): automation admin with the staging role «Admin Legal»; data-check checks it is active.",
+    "promotionTargetRole": "Procurement Manager"
+  },
+  "vendor": {
+    "distributorAName": "QA-DIST Distributor A",
+    "bmhpAlkesAvatarInitials": "QA",
+    "unknownEmail": "regression-unknown@hubstudio.id",
+    "wrongPassword": "Wrong-Password-123"
+  },
+  "member": {
+    "citoCondition": "Regression check: urgent stock for the ICU",
+    "cartProductName": "QA-PMP-517-ITEM-02",
+    "_cartProductNote": "Contracted, Cito-eligible QA SKU (I0002725, principal V00003) in the HRMPSTQ catalog, shared by qa+auto-member@ and qa+auto-maker@. Under contract KTR-00027 until 22 Oct 2027; marketing authorisation until 31 Dec 2027 (checked 6 Nov 2026). Renew the data before then."
+  },
+  "inputs": {
+    "failedLoginsBeforeLock": 5
+  },
+  "retiredMemberDocumentRules": [
+    "Statement Letter",
+    "Rekening Bank",
+    "Persetujuan Perubahan Data",
+    "Akta Perubahan Modal",
+    "Surat Persetujuan Kemenkum",
+    "Akta Perubahan Pasal 3",
+    "Surat Perubahan Kemenkum",
+    "Akta Perubahan Direksi",
+    "Pengesahan Menkum RI"
+  ],
+  "productTypes": [
+    "Alkes",
+    "Alat Umum",
+    "BMHP & Reagen",
+    "Jasa Umum",
+    "Obat",
+    "Perbekalan Umum",
+    "Perbekalan Pangan"
+  ],
+  "vendorWizard": {
+    "_comment": "Registration data typed into the qa+pmp466v@ draft by VREG-01 (never submitted). Values follow the QA-DIST draft that passed review.",
+    "companyName": "QA-PMP-466 Vendor Wizard",
+    "entityType": "Distributor",
+    "partnerCategory": "Medis",
+    "nib": "9121104466001",
+    "npwp": "012104466001000",
+    "taxStatus": "PKP",
+    "scope": "Nasional",
+    "kbli": "46691",
+    "address": "Jl. QA Regression No. 466",
+    "postalCode": "10110",
+    "phone": "+62211104466",
+    "city": "Jakarta",
+    "productType": "Obat",
+    "sppkp": "S-QA-466",
+    "deed": {
+      "type": "Pendirian",
+      "number": "QA-REG-466-AKTA-01",
+      "date": "2020-01-01",
+      "notaryName": "Notaris QA",
+      "notaryCity": "Jakarta",
+      "kemenkumhamLetter": "AHU-QA-REG-466",
+      "skNumber": "SK-QA-REG-466",
+      "skDate": "2020-01-02"
+    },
+    "responsible": {
+      "signer": "Direktur sesuai akta",
+      "directorName": "Direktur QA REG 466",
+      "directorNik": "3171050511040001",
+      "directorEmail": "qa+pmp466v@hubstudio.id",
+      "directorPhone": "+6281211044660",
+      "contactName": "Kontak QA REG 466",
+      "contactPosition": "Sales",
+      "contactEmail": "qa+pmp466v@hubstudio.id",
+      "contactPhone": "+6281211044661"
+    },
+    "bank": {
+      "name": "Bank QA",
+      "branch": "Jakarta",
+      "accountNumber": "4661104466",
+      "accountHolder": "QA-PMP-466 Vendor Wizard"
+    },
+    "dummyDocument": "src/testdata/files/qa-dummy-document.pdf",
+    "marketingAuthorizationHolder": "Tidak",
+    "documentNumberPrefix": "QA-REG-466-DOC",
+    "documentValidUntil": "2030-12-31",
+    "baselineDocument": {
+      "ruleSlug": "npwp-perusahaan",
+      "name": "NPWP Perusahaan"
+    },
+    "_baselineDocumentNote": "VREG-01 @wizard-baseline removes this file before the scenario (DELETE …/required-documents/<rule>/files/<reference>) so the upload path runs every time, and uploads it back after if the scenario did not. Required, PDF, no number/validity. Consents cannot be reset (no revoke endpoint): the scenario checks they are on the draft."
+  },
+  "vendorActivationInvite": {
+    "_comment": "VREG-04: each run invites a new QA distributor with the first free AX code from these blocks (staging AX master), then archives it.",
+    "axCodePrefixes": [
+      "M0101-05",
+      "M0102-03"
+    ],
+    "entityType": "Distributor",
+    "partnerCategory": "Medis",
+    "productType": "Obat",
+    "namePrefix": "QA-REG-VREG04",
+    "emailPrefix": "qa+vreg04-",
+    "firstUserRole": "Admin Vendor"
+  },
+  "pksDraft": {
+    "_comment": "VREG-05: QA contract KTR-00062 (QA-GRP3 Distributor BMHP, fixture of PMP-675/PMP-682, both Closed) in «Peninjauan PKS». The regression case reads the reserved latest PKS fixture; it must not create a new version per run. Was KTR-00047 (PMP-515, still in testing).",
+    "vendorSlug": "qa-grp3-distributor-bmhp",
+    "contractSlug": "ktr-00062",
+    "agreementTitle": "PERJANJIAN KERJA SAMA",
+    "_bodyTitleNote": "PMP-675 TC-1.1: the PKS-KOMP of this BMHP-only distributor is headed «PERJANJIAN KERJA SAMA» then this body title.",
+    "bodyTitle": "PENGADAAN PRODUK BAHAN MEDIS HABIS PAKAI"
+  },
+  "lists": {
+    "_comment": "LIST-01 (PMP-60, PMP-306): every list answers 25 rows a page; the invoice number is picked from the API at run time. The empty-state text replaced «Belum ada invoice pada tab dan filter ini.» (seen 6 Nov 2026).",
+    "pageSize": 25,
+    "emptyListMessage": "Tidak ada data yang cocok dengan filter aktif",
+    "unknownSearch": "ZZZ999"
+  },
+  "memberInvitation": {
+    "_comment": "MREG-05 (PMP-608): the invitation e-mail of the member-maker account, accepted on 6 Nov 2026, so its link is a used one. Submitting it again is refused (422) and changes nothing.",
+    "account": "member-maker",
+    "subject": "Anda diundang ke Member Portal PMP"
+  },
+  "stockFlag": {
+    "_comment": "CAT-06: vendor V00003 (Test Vendor Oktober) marks this QA SKU out of stock and makes it available again in teardown. Not used by the cart tests.",
+    "productName": "QA-PMP-517-R28-ITEM-01"
+  },
+  "negotiationAttachment": {
+    "_comment": "NEG-03 (PMP-732): reads the attachments of the NEG-02 fixture negotiation (QA-DIST, opened 5 Nov 2026); read-only.",
+    "code": "NEG-2026-0033",
+    "limitBytes": 10485760,
+    "tooLargeAlert": "Ukuran lampiran maksimum 10 MB.",
+    "messagePrefix": "QA regression NEG-02 lampiran 10 MB",
+    "_limitNote": "NEG-02 (PMP-731): the vendor client refuses size > 10485760 bytes; exactly 10485760 must be sent. Each run posts one message on NEG-2026-0033 (messages cannot be deleted).",
+    "openCode": "NEG-2026-0036",
+    "_openCodeNote": "NEG-02 posts here: proposal PJ-2026-0073 «QA-REG-NEG02 Obat 01» (QA-DIST Distributor A) submitted and routed 10 Nov 2026. Reserved for the suite: never agree, reject or close it. NEG-2026-0033 (completed 6 Nov) is read by NEG-03 only."
+  },
+  "productActivation": {
+    "_comment": "CAT-09 (PMP-739): the «Lihat» drawer of a product waiting for verification.",
+    "waitingTab": "Menunggu verifikasi",
+    "feeAttributionHeading": "ATRIBUSI JASA MANAJEMEN SKU INI",
+    "drawerActions": [
+      "Ubah penanggung atau tarif",
+      "Tolak produk",
+      "Setujui & terbitkan"
+    ]
+  },
+  "roles": {
+    "viewOnlyRoleSlug": "role-gg",
+    "_viewOnlyRoleNote": "ROLE-07 (PMP-752): Role GG (account admin-config-view) holds Lihat on Registrasi Vendor and Kelola on nothing."
+  },
+  "documentTemplates": {
+    "_comment": "ROLE-11 (PMP-726): Kelola holders on Template Dokumen get these actions (Team Lead decision 29 Oct 2026, comment 14271).",
+    "listAction": "Unggah templat baru",
+    "detailAction": "Unggah versi baru",
+    "versionedTemplate": "TRX-RT",
+    "archivedStatus": "Diarsipkan",
+    "activeStatus": "Aktif",
+    "_tplNote": "data-check: TPL-02 needs TRX-RT to keep an archived version; TPL-01 needs SRT-SKK active with an active version that does not print the test field."
+  },
+  "hnaChange": {
+    "_comment": "CAT-07 (PMP-735): reserved Aktif SKU (V00003, KTR-00027 to 22 Oct 2027) visible to member-super; each run adds one price line alternating between the two HNA values (no delete endpoint, so lines add up on this SKU only). Do not use it in manual QA.",
+    "productName": "QA-PMP-517-ITEM-05",
+    "sku": "I0002728-V00003-P00002",
+    "hnaValues": [
+      100000,
+      101000
+    ]
+  },
+  "templateUploadCheck": {
+    "_comment": "TPL-01 (PMP-792): SRT-SKK (one-page letter, 0 PKS, 0 drafts; already used for QA uploads) gets its active DOCX plus a field its letter never fills, placed in the letter body right after anchorField (never at the end of the file: that is the field legend page, which Core does not scan); the upload must be refused and nothing stored. @restore-template re-uploads the original if a version was stored anyway.",
+    "templateCode": "SRT-SKK",
+    "unfilledField": "{{nama_faskes}}",
+    "anchorField": "{{nib}}",
+    "errorCode": "TEMPLATE_RENDER_FAILED",
+    "reason": "unknown_field",
+    "message": "Templat tidak dapat dibuat menjadi PDF. Periksa templat, lalu unggah ulang.",
+    "note": "QA regression TPL-01: field yang tidak diisi surat (harus ditolak)"
+  },
+  "soleWizard": {
+    "_comment": "VREG-06 (PMP-753): draft qa+auto-sole@ «QA-AUTO Sole Distributor PMDN», invited by Admin «Undangan Mendaftar» as Sole distributor · Medis · Obat · PMDN (10 Nov 2026). Entity type, category and product type come from the invitation (null = not chosen). Identifiers differ from VREG-01's draft. Never submitted.",
+    "companyName": "QA-AUTO Sole Distributor PMDN",
+    "entityType": null,
+    "partnerCategory": null,
+    "productType": null,
+    "npwp": "012104466002000",
+    "nib": "9121104466002",
+    "sppkp": "S-QA-466-SOLE",
+    "phone": "+62211104467",
+    "address": "Jl. QA Regression No. 467",
+    "deed": {
+      "type": "Pendirian",
+      "number": "QA-REG-466-SOLE-AKTA-01",
+      "date": "2020-01-01",
+      "notaryName": "Notaris QA",
+      "notaryCity": "Jakarta",
+      "kemenkumhamLetter": "AHU-QA-REG-466-SOLE",
+      "skNumber": "SK-QA-REG-466-SOLE",
+      "skDate": "2020-01-02"
+    },
+    "investmentStatus": "PMDN",
+    "typeNib": true,
+    "_draftNote": "data-check: the draft must stay unsubmitted (submitted_at null) for VREG-06 to run again."
+  },
+  "memberRegistration": {
+    "_comment": "MREG-06 (PMP-793): draft qa+auto-regmember@ «QA-AUTO RS Pendaftaran» (Admin «Undangan Mendaftar», 10 Nov 2026), never submitted. The profile is written by API each run (idempotent) so SRT-SP can be issued; SRT-SP is two pages by design (letter + Lampiran, comment 14405).",
+    "profile": {
+      "member_type": "hospital",
+      "member_kind": "independent_partner",
+      "facility_class": "hospital_class_c",
+      "legal_entity_name": "PT QA Auto RS Pendaftaran",
+      "business_entity_form": "PT",
+      "npwp": "012104466003000",
+      "nib": "9121104466003",
+      "address": "Jl. QA Regression No. 468",
+      "legal_address": "Jl. QA Regression No. 468",
+      "province_code": "31",
+      "regency_code": "31.01",
+      "district_code": "31.01.01",
+      "village_code": "31.01.01.1001",
+      "postal_code": "14530",
+      "facility_email": "qa+auto-regmember@hubstudio.id",
+      "facility_code": "3101011",
+      "phone": "+62211104468",
+      "contact_person": "QA Kontak RS",
+      "contact_email": "qa+auto-regmember@hubstudio.id",
+      "operational_license_no": "QA-IZIN-OP-468",
+      "operational_license_valid_until": "2030-12-31",
+      "accreditation": "Paripurna",
+      "accreditation_valid_until": "2030-12-31",
+      "signer_name": "Direktur QA RS 468",
+      "signer_position": "Direktur",
+      "signer_nik": "3101011104680001",
+      "signer_phone": "+62811104468",
+      "signer_email": "qa+auto-regmember@hubstudio.id",
+      "signer_is_director": true,
+      "director_name": "Direktur QA RS 468",
+      "director_position": "Direktur",
+      "director_nik": "3101011104680001",
+      "director_phone": "+62811104468",
+      "director_email": "qa+auto-regmember@hubstudio.id"
+    },
+    "letterCode": "SRT-SP",
+    "expectedPages": 2,
+    "documentIdLabel": "ID Dokumen",
+    "unfilledMarker": "{{id_dokumen}}",
+    "partnerVendorSlug": "qa-dist-distributor-a",
+    "facilityName": "QA-AUTO RS Pendaftaran"
+  },
+  "adminTasks": {
+    "_comment": "SLA-01 (PMP-673 TC-1.2): an open VENDOR_INVOICE_CREATE task titled «SLA Terlampaui» (e.g. PO-QATTAS-V00003-2610-00047) opened by the non-full-access admin-archive-log account.",
+    "slaCode": "VENDOR_INVOICE_CREATE",
+    "breachedTitle": "SLA Terlampaui",
+    "invoiceStage": "Vendor menerbitkan invoice"
+  },
+  "contracts": {
+    "_comment": "KTR-01 (PMP-666 TC-1.1): an Aktif contract past its end date (from the API, e.g. KTR-00048 QA-PMP-666-PAST, ended 1 Nov 2026) keeps «PKS Aktif».",
+    "storedActiveLabel": "PKS Aktif",
+    "endedLabel": "Berakhir"
+  },
+  "legalCounter": {
+    "_comment": "VREG-02 (PMP-515 TC-450-04-015): the Dokumen counter splits waiting files into wajib, opsional and the generated letters («surat»: SRT-KJM, SRT-PI). Counts come from GET /admin/vendor-registrations/<slug> document_categories[].documents[] (is_required, submission.review_status pending).",
+    "letterDocumentTypes": [
+      "surat_komitmen_jasa",
+      "pakta_integritas"
+    ],
+    "waitingStatus": "pending"
+  },
+  "facilityInvite": {
+    "_comment": "MREG-03 (PMP-673 TC-1.6): «Undang faskes» states the validity configured in Standar Operasional (SLA MEMBER_FACILITY_INVITE_ACCEPT, working days).",
+    "slaCode": "MEMBER_FACILITY_INVITE_ACCEPT"
+  },
+  "negotiation": {
+    "_comment": "NEG-01 (PMP-518 TC-450-07-006/010): the Admin target card and payload of the vendor's first negotiation (NEG-2026-0036 on 10 Nov 2026).",
+    "targetCardLabel": "Target diskon bagian",
+    "retiredRoundingLabel": "Pembulatan"
+  }
+}
