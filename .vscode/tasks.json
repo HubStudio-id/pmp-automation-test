@@ -32,12 +32,6 @@
       "problemMatcher": []
     },
     {
-      "label": "BDD: lockout (AUTH-06)",
-      "type": "npm",
-      "script": "bdd:lockout",
-      "problemMatcher": []
-    },
-    {
       "label": "BDD: everything (all phases)",
       "type": "npm",
       "script": "bdd:all",

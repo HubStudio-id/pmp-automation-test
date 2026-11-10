@@ -1,6 +1,6 @@
 # PMP Automation Test
 
-![Node.js](https://img.shields.io/badge/Node.js-26.12%2B-green)
+![Node.js](https://img.shields.io/badge/Node.js-26.12%2B-orange)
 ![Cucumber](https://img.shields.io/badge/Cucumber-BDD-brightgreen)
 ![Playwright](https://img.shields.io/badge/Playwright-Chromium-blue)
 ![Allure](https://img.shields.io/badge/Allure-Report-red)
@@ -35,7 +35,7 @@ the account session they use.
 
 ---
 
-## Setup
+## How to Setup
 
 Requirements:
 
@@ -67,13 +67,13 @@ npm run bdd:auth
 
 ## How to Run Tests
 
-Run the smoke suite:
+Run the smoke test:
 
 ```bash
 npm run bdd:p1
 ```
 
-Run the full regression cycle:
+Run the regression test:
 
 ```bash
 npm run bdd:all
@@ -124,9 +124,6 @@ reports/
 └── pmp-regression/     Full regression Allure, Cucumber, and trace outputs
 ```
 
-The Allure report title follows the run type: **PMP - Smoke Test Report** for `bdd:p1`, and
-**PMP - Regression Test Report** for `bdd:all` and `bdd:fresh`.
-The top-level Allure group is always `pmp`; only the report title and storage folder vary by run type.
 
 ➡️ [Open the latest live Allure Report](https://hubstudio-id.github.io/pmp-automation-test/)
 
@@ -197,15 +194,3 @@ tools/             Session, account, data-check, and phase-runner utilities
 reports/           Cucumber, Allure, and failure outputs
 .github/workflows/ GitHub Actions CI workflow
 ```
-
-## Useful Commands
-
-| Command | Purpose |
-|:--|:--|
-| `npm run bdd:auth` | Prepare and reuse saved sessions |
-| `npm run bdd:data-check` | Validate reusable staging fixtures |
-| `npm run bdd:check` | Typecheck and verify Cucumber steps |
-| `npm run bdd:p1` | Run the smoke suite |
-| `npm run bdd:all` | Run the full regression cycle |
-| `npm run bdd:report` | Generate and open Allure |
-| `npm run bdd:trace -- <file.zip>` | Open a failed Playwright trace |

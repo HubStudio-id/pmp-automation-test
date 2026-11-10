@@ -3,7 +3,6 @@
 //   npm run bdd           main set (P1 + P2), parallel BDD_WORKERS (default 5), without the scenarios that sign in themselves
 //   npm run bdd:p1        P1 sanity only (main P1 in parallel, then the P1 sign-in form scenarios)
 //   npm run bdd:sign-in   scenarios that sign in through the form (@sign-in-form)
-//   npm run bdd:lockout   AUTH-06 (five wrong passwords)
 //   npm run bdd:admin-portal | bdd:vendor-portal | bdd:member-portal   main set of one portal folder
 //   npm run bdd:report    build and open the Allure report (Allure 3, no Java needed)
 // Each profile writes its own cucumber report, so phases that run at the same time never overwrite each other.

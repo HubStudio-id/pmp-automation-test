@@ -1,5 +1,5 @@
 {
-  "name": "pmp-regression",
+  "name": "pmp",
   "private": true,
   "type": "module",
   "description": "PMP regression tests (Cucumber + Playwright + Allure) against staging. Run with npm run bdd",
@@ -19,7 +19,6 @@
     "bdd": "npm run bdd:auth && NODE_OPTIONS='--import tsx' cucumber-js",
     "bdd:p1": "REPORT_KIND=smoke node tools/run-bdd-phases.mjs --p1",
     "bdd:sign-in": "npm run bdd:auth && NODE_OPTIONS='--import tsx' cucumber-js --profile signin",
-    "bdd:lockout": "npm run bdd:auth && NODE_OPTIONS='--import tsx' cucumber-js --profile lockout",
     "bdd:admin-portal": "npm run bdd:auth && NODE_OPTIONS='--import tsx' cucumber-js --profile adminPortal",
     "bdd:vendor-portal": "npm run bdd:auth && NODE_OPTIONS='--import tsx' cucumber-js --profile vendorPortal",
     "bdd:member-portal": "npm run bdd:auth && NODE_OPTIONS='--import tsx' cucumber-js --profile memberPortal",

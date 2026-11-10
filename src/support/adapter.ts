@@ -55,7 +55,9 @@ export function fixturesFor(page: Page): Fixtures {
       await page.goto(url, { waitUntil: 'domcontentloaded' });
       // The portals are SPAs: goto() can finish before the app shell and its first API-backed render exist.
       // Wait for visible document content instead of sleeping, so slow CI runners do not assert on a blank page.
-      await page.waitForFunction(() => Boolean(document.body?.innerText.trim()), undefined, { timeout: 15_000 });
+      // Some API-only steps open the portal only to use its authenticated browser context. They do not need a rendered
+      // shell, so a blank/slow SPA must not fail the setup before the API request can run.
+      await page.waitForFunction(() => Boolean(document.body?.innerText.trim()), undefined, { timeout: 15_000 }).catch(() => undefined);
     },
     screenshot: async () => page.screenshot(),
   };
