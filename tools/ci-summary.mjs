@@ -75,7 +75,8 @@ const repo = env.GITHUB_REPOSITORY ?? 'HubStudio-id/pmp-automation-test';
 const runUrl = env.GITHUB_RUN_ID ? `${server}/${repo}/actions/runs/${env.GITHUB_RUN_ID}` : env.RUN_URL;
 const sha = (env.GITHUB_SHA ?? '').slice(0, 7) || env.SHA;
 const commitTitle = env.COMMIT_TITLE ?? (() => { try { return execSync('git log -1 --format=%s', { encoding: 'utf8' }).trim(); } catch { return ''; } })();
-const branch = env.GITHUB_REF_NAME ?? env.BRANCH ?? 'main';
+// On a pull request GITHUB_REF_NAME is «<n>/merge»; GITHUB_HEAD_REF holds the PR's branch.
+const branch = env.GITHUB_HEAD_REF || env.GITHUB_REF_NAME || env.BRANCH || 'main';
 const trigger = { push: 'push', schedule: 'schedule (weekly)', workflow_dispatch: 'manual', pull_request: 'pull request' }[env.GITHUB_EVENT_NAME] ?? env.GITHUB_EVENT_NAME ?? 'manual';
 const started = env.RUN_STARTED_AT ? new Date(env.RUN_STARTED_AT) : undefined;
 const ended = env.RUN_ENDED_AT ? new Date(env.RUN_ENDED_AT) : new Date();
