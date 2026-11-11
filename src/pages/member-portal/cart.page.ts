@@ -73,18 +73,38 @@ export class CartPage extends MemberShell {
     return this;
   }
 
-  /** Removes every line, one at a time, waiting after each for the cart API and the re-rendered cart. */
+  /**
+   * Removes every line, then reopens the cart through the catalog to check that the stored cart is empty, up to three
+   * rounds. Why not «wait for the cart API after each removal»: on CI that answer sometimes never came within 30 s
+   * (11 Nov 2026: no API response at all after «Hapus item»), which failed the @empty-cart clean-up while the line
+   * may or may not have been removed. The reopened cart is what the next run starts from, so that is what is checked.
+   */
   async removeAllLines(): Promise<this> {
-    await this.autosaveStatus.or(this.emptyCartMessage).first().waitFor();
-    while (await this.anyRemoveButton.count()) {
-      await this.anyRemoveButton.first().tap();
-      await Promise.all([
-        this.browser.waitForResponse(CART_API),
-        this.screen.getByRole('dialog').getByRole('button', { name: 'Hapus item' }).tap(),
-      ]);
-      await this.screen.getByRole('dialog').waitFor({ state: 'hidden' });
+    const ROUNDS = 3;
+    for (let round = 1; ; round++) {
       await this.autosaveStatus.or(this.emptyCartMessage).first().waitFor();
+      while (await this.anyRemoveButton.count()) await this.removeFirstLine();
+      await this.openFromHeader();
+      const left = await this.anyRemoveButton.count();
+      if (!left) return this;
+      if (round === ROUNDS) throw new Error(`the cart still has ${left} line(s) after ${ROUNDS} rounds of «Hapus item»`);
     }
-    return this;
+  }
+
+  /** Removes the first line: confirms «Hapus item» (tapping «Hapus» again when the re-rendering cart swallowed it). */
+  private async removeFirstLine(): Promise<void> {
+    const DIALOG_OPEN_MS = 3000;
+    const SAVE_MS = 15_000;
+    const lines = await this.anyRemoveButton.count();
+    const dialog = this.screen.getByRole('dialog');
+    await this.anyRemoveButton.first().tap();
+    const opened = await dialog.waitFor({ timeout: DIALOG_OPEN_MS }).then(() => true, () => false);
+    if (!opened) await this.anyRemoveButton.first().tap();
+    // The save is checked by reopening the cart (removeAllLines), so a slow or missing answer only shortens the wait.
+    const saved = this.browser.waitForResponse(CART_API, { timeout: SAVE_MS }).catch(() => undefined);
+    await dialog.getByRole('button', { name: 'Hapus item' }).tap();
+    await dialog.waitFor({ state: 'hidden' });
+    await saved;
+    await this.anyRemoveButton.nth(lines - 1).waitFor({ state: 'detached', timeout: SAVE_MS }).catch(() => undefined);
   }
 }
