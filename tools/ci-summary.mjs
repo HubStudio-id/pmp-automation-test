@@ -39,7 +39,6 @@ const tests = attempts.filter((t) => !t.isRetry).map((t) => {
     portal: (pkg.match(/features\.(admin|member|vendor)-portal/) ?? [])[1] ?? 'other',
     priority: label(t, 'priority') ?? '—',
     severity: label(t, 'severity') ?? '—',
-    knownBug: tags(t).includes('@known-bug'),
     status: t.status, // passed | failed | broken | skipped | unknown
     duration: t.duration ?? 0,
     error: firstLine(t.error?.message) + expectedReceived(t.error?.message),
@@ -126,12 +125,6 @@ if (bad.length) {
 if (flaky.length) {
   divider();
   section(`*🔁 Passed on retry (${flaky.length})*: first attempt failed, usually the staging connection\n${list(flaky, (t) => scenarioLine(t, `1st attempt: \`${esc(t.firstError || 'no message')}\``))}`);
-}
-const known = tests.filter((t) => t.knownBug);
-if (known.length) {
-  divider();
-    // A @known-bug scenario asserts the bug as it is today, so a pass means the bug is still there.
-  section(`*🐞 Known bugs tracked (${known.length})*: the scenario asserts the bug, so a pass = still open\n${list(known, (t) => scenarioLine(t, isBad(t) ? '⚠️ behaviour changed: fixed or different now, check the ticket' : 'still open'))}`);
 }
 
 divider();

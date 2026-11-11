@@ -160,7 +160,7 @@ Rule (QA lead): every case names its TC / AC line and asserts **at least one** o
 | DASH-01 | PMP-649 TC-3.1 | no «Atur widget», after the blocks are shown | ok |
 | ARC-01 | PMP-312 / PMP-669 TC-2.8 | every Arsip tab shows a count | ok |
 | LIST-01 | PMP-306 | full number / last segment find one invoice, middle / ZZZ999 empty | ok |
-| CART-01 | PMP-835 AC1 | «Tidak ada Cito» (red: soft known bug) and Cito count | ok |
+| CART-01 | PMP-835 AC1 | «Tidak ada Cito» (PMP-835, fixed on staging 9 Nov 2026) and Cito count | ok |
 | KTR-01 | PMP-666 TC-1.1 | an Aktif contract past its end date (API validity_state past) keeps «PKS Aktif», not «Berakhir»; badge awaits PMP-540; weak vendor scenario dropped | **ok** (fixed 10 Nov) |
 | VREG-02 | PMP-515 TC-450-04-015 | «Dokumen» counter = API waiting files (wajib · opsional · surat) | **ok** (fixed 10 Nov) |
 | NOTIF-01 | PMP-746 TC-1.2 | bell panel (its own overlay, not any menu) shows «n baru» = API unread_count and 1–6 rows | **ok** (fixed 10 Nov) |
@@ -198,7 +198,7 @@ design fidelity PMP-439, 441, 801. PMP-652 (SRT-LOA) can return once the PO's de
 - Mode: e2e 30 · e2e+ 12
 - Severity: blocker 1 · critical 22 · normal 19
 - Rule coverage (cases tagged): (1) 30 · (2) 11 · (3) 18 · (4) 26 · (5) 8 · (6) 7
-- Reds: the earlier @known-bug cases. TPL-01 was a false red until 10 Nov 2026: its file put the field on the legend page, which Core never scans; fixed to put it in the body. MREG-06 notes SRT-SP's page count (3 vs 2 expected) for HUB's answer, without failing
+- Reds: none expected. The @known-bug tag was dropped on 11 Nov 2026: its only case, CART-01, passes since PMP-835 was fixed (9 Nov) and stays as its regression check; the Slack summary lists failures only. TPL-01 was a false red until 10 Nov 2026: its file put the field on the legend page, which Core never scans; fixed to put it in the body. MREG-06 notes SRT-SP's page count (3 vs 2 expected) for HUB's answer, without failing
 
 ## Deleted (10 Nov 2026 — minor/trivial severity is left out, QA lead)
 

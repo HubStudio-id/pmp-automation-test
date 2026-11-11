@@ -35,6 +35,6 @@ Then('the footer reads {string}', async function (this: RegressionWorld, pattern
 Then('the summary counts {string}', async function (this: RegressionWorld, text: string) {
   await expect(this.page.getByText(text, { exact: true })).toBeVisible();
 });
-Then(/^the group read «Tidak ada Cito» before any line was Cito \(known bug PMP-835\)$/, function (this: RegressionWorld) {
+Then(/^the group read «Tidak ada Cito» before any line was Cito \(PMP-835\)$/, function (this: RegressionWorld) {
   expect(this.stash.groupShowedNoCito, '«Tidak ada Cito» on the distributor group (bug PMP-835)').toBe(true);
 });
