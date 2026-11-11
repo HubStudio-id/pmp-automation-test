@@ -1,12 +1,11 @@
 # PMP Automation Test
 
 ![Node.js](https://img.shields.io/badge/Node.js-26.12%2B-orange)
-![Cucumber](https://img.shields.io/badge/Cucumber-BDD-brightgreen)
 ![Playwright](https://img.shields.io/badge/Playwright-Chromium-blue)
+![Cucumber](https://img.shields.io/badge/Cucumber-BDD-brightgreen)
 ![Allure](https://img.shields.io/badge/Allure-Report-red)
 
-PMP Automation Test is a pre-release regression suite for the PMP Admin, Vendor, and Member portals. It is built with
-Cucumber BDD, Playwright, TypeScript, and Allure reporting, with GitHub Actions used for CI execution.
+PMP Automation Test is a pre-release regression suite for the PMP Admin, Vendor, and Member portals. It is built with Playwright, Cucumber BDD, TypeScript, and Allure reporting, with GitHub Actions used for CI execution.
 
 ---
 
@@ -187,6 +186,22 @@ npm run bdd:report
 
 ## Test Reports
 
-➡️ [Click here to see the latest live Allure Report](https://hubstudio-id.github.io/pmp-automation-test/)
+After each CI/CD test execution, the framework automatically generates and delivers the following reports:
 
-Every CI run on `main` (push, manual and the weekly schedule) also posts a summary to Slack **#qa-test-report** once the Allure report is published; pull request runs keep their report in the run's artifacts and do not post: suite and verdict, pass rate, totals, per-portal results, failed and retried scenarios, and links to the report and the run. The message is built by `tools/ci-summary.mjs` (preview locally with `REPORT_KIND=smoke node tools/ci-summary.mjs --text`) and posted through the `SLACK_WEBHOOK_URL` secret, an Incoming Webhook of the Slack app *automation-test-report* bound to #qa-test-report. Without that secret the Slack job is skipped.
+- **Allure Report**
+  - Detailed test execution results
+  - Passed, failed, and broken test results
+  - [Click here to see the Live Allure Report](https://hubstudio-id.github.io/pmp-automation-test/)
+
+- **Slack Notifications**
+  - Automated test result summary
+  - Direct links to the Live Allure Report and GitHub Actions pipeline
+  - Posted to **#qa-test-report** for push, manual, and scheduled runs on `main`
+
+The test runner stores local reports under `reports/`:
+
+```text
+reports/
+├── pmp-smoke/          Smoke Allure, Cucumber, and trace outputs
+└── pmp-regression/     Full regression Allure, Cucumber, and trace outputs
+```
