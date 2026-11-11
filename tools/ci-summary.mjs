@@ -135,14 +135,14 @@ if (known.length) {
 }
 
 divider();
-const phaseLine = phases.length ? phases.map((p) => `${p.code ? '❌' : '✅'} ${p.name} ${secs(p.s * 1000)}`).join(' · ') : '_no phase log_';
-const slow = [...tests].sort((a, b) => b.duration - a.duration).slice(0, 5).map((t) => `${t.id} ${secs(t.duration)}`).join(' · ');
+const phaseLine = phases.length ? phases.map((p) => `${p.code ? '❌' : '✅'} ${p.name} ${secs(p.s * 1000)}`).join('\n') : '_no phase log_';
+const slow = [...tests].sort((a, b) => b.duration - a.duration).slice(0, 5).map((t) => `• ${t.id} ${secs(t.duration)}`).join('\n');
 const health = [
   `${reloads.length ? '⚠️' : '✅'} Blank-page reloads: *${reloads.length}*${reloads.length ? ` (${[...new Set(reloads)].slice(0, 5).join(', ')})` : ''}`,
   `${networkGiveUps ? '❌' : '✅'} Requests failed after 3 tries: *${networkGiveUps}*`,
   `⏳ Sign-in rate-limit waits: *${waits.length}* (${waits.reduce((a, b) => a + b, 0)}s total)`,
 ].join('\n');
-section(`*Phases*   ${phaseLine}\n*Slowest*   ${slow}\n\n*Staging connection (CI → staging)*\n${health}`);
+section(`*Phases*\n${phaseLine}\n\n*Slowest*\n${slow}\n\n*Staging connection (CI → staging)*\n${health}`);
 
 const buttons = [
   env.PAGES_URL && { text: '📊 Allure report', url: env.PAGES_URL, style: 'primary' },
