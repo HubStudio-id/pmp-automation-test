@@ -129,8 +129,9 @@ jobs:
             reports/pmp-regression/cucumber/
             reports/pmp-regression/run.log
 
+      # Pull requests keep the report in the artifact only: github-pages accepts deployments from main alone.
       - name: Upload report for GitHub Pages
-        if: always() && steps.report_status.outputs.ready == 'true'
+        if: always() && steps.report_status.outputs.ready == 'true' && github.event_name != 'pull_request'
         uses: actions/upload-pages-artifact@v5
         with:
           path: reports/pmp-${{ inputs.suite || (github.event_name == 'schedule' && 'regression' || 'smoke') }}/allure-report
@@ -138,7 +139,7 @@ jobs:
   publish-report:
     name: Publish Allure report
     needs: regression
-    if: always() && needs.regression.result != 'cancelled' && needs.regression.outputs.report_ready == 'true'
+    if: always() && github.event_name != 'pull_request' && needs.regression.result != 'cancelled' && needs.regression.outputs.report_ready == 'true'
     runs-on: ubuntu-latest
     permissions:
       pages: write
@@ -155,10 +156,11 @@ jobs:
 
   # Posts the run summary to Slack #qa-test-report after the Allure report is live, so its button opens this run.
   # Needs the SLACK_WEBHOOK_URL secret (an Incoming Webhook bound to #qa-test-report); skipped when it is not set.
+  # Pull requests do not post: their change posts once it reaches main.
   notify-slack:
     name: Notify Slack
     needs: [regression, publish-report]
-    if: always() && needs.regression.result != 'cancelled'
+    if: always() && github.event_name != 'pull_request' && needs.regression.result != 'cancelled'
     runs-on: ubuntu-latest
     permissions:
       contents: read
