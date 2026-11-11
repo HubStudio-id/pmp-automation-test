@@ -2,7 +2,7 @@
 //   node tools/ci-summary.mjs [--out slack.json] [--text]
 // Inputs:
 //   reports/pmp-<kind>/allure-report/data/test-results/*.json   one file per attempt (retries included)
-//   reports/pmp-<kind>/run.log                                   output of the phase runner (phases, reloads, waits)
+//   reports/pmp-<kind>/run.log                                   output of the phase runner (page reloads, failed requests, rate-limit waits)
 //   GITHUB_* env (run URL, branch, sha, actor, event), PAGES_URL, RUN_STARTED_AT (ISO), REPORT_KIND
 // --text prints a plain preview instead of JSON. Only counts, scenario names, error first lines and links are sent:
 // no tokens, request URLs or screenshots.
@@ -56,7 +56,6 @@ const skipped = tests.filter((t) => !isBad(t) && t.status !== 'passed');
 
 // ---- run log -------------------------------------------------------------------------------------------------------
 const log = existsSync(logPath) ? readFileSync(logPath, 'utf8') : '';
-const phases = [...log.matchAll(/\[phase\] (.+?): exit (\d+), (\d+) s/g)].map(([, name, code, s]) => ({ name, code: +code, s: +s }));
 // src/support/adapter.ts logs «[app.open] /path stayed blank …» and «[app.open] /path: net::ERR_… ; loading it again».
 const reloads = [...log.matchAll(/\[app\.open\] (\S+?):? (?:stayed blank|net::\S+)/g)].map((m) => m[1]);
 const networkGiveUps = (log.match(/\[network\] /g) ?? []).length;
@@ -128,14 +127,13 @@ if (flaky.length) {
 }
 
 divider();
-const phaseLine = phases.length ? phases.map((p) => `${p.code ? '❌' : '✅'} ${p.name} ${secs(p.s * 1000)}`).join('\n') : '_no phase log_';
-const slow = [...tests].sort((a, b) => b.duration - a.duration).slice(0, 5).map((t) => `• ${t.id} ${secs(t.duration)}`).join('\n');
+const slow = [...tests].sort((a, b) => b.duration - a.duration).slice(0, 3).map((t) => `• ${t.id} ${secs(t.duration)}`).join('\n');
 const health = [
   `${reloads.length ? '⚠️' : '✅'} Blank-page reloads: *${reloads.length}*${reloads.length ? ` (${[...new Set(reloads)].slice(0, 5).join(', ')})` : ''}`,
   `${networkGiveUps ? '❌' : '✅'} Requests failed after 3 tries: *${networkGiveUps}*`,
   `⏳ Sign-in rate-limit waits: *${waits.length}* (${waits.reduce((a, b) => a + b, 0)}s total)`,
 ].join('\n');
-section(`*Phases*\n${phaseLine}\n\n*Slowest*\n${slow}\n\n*Staging connection (CI → staging)*\n${health}`);
+section(`*Slowest scenarios*\n${slow}\n\n*Staging connection (CI → staging)*\n${health}`);
 
 const buttons = [
   env.PAGES_URL && { text: '📊 Allure report', url: env.PAGES_URL, style: 'primary' },
