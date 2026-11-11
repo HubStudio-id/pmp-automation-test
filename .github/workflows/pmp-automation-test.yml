@@ -36,8 +36,14 @@ jobs:
       REPORT_KIND: ${{ inputs.suite || (github.event_name == 'schedule' && 'regression' || 'smoke') }}
     outputs:
       report_ready: ${{ steps.report_status.outputs.ready }}
+      started_at: ${{ steps.started.outputs.at }}
+      ended_at: ${{ steps.ended.outputs.at }}
 
     steps:
+      - name: Record start time
+        id: started
+        run: echo "at=$(date -u +%Y-%m-%dT%H:%M:%SZ)" >> "$GITHUB_OUTPUT"
+
       - name: Check out repository
         uses: actions/checkout@v5
 
@@ -73,12 +79,20 @@ jobs:
           BDD_TRACE: '0'
           # Retry a failed scenario once: the runner's connection to staging is sometimes reset (cucumber.mjs).
           BDD_RETRY: '1'
+        # run.log feeds the Slack summary (phases, page reloads, rate-limit waits): tools/ci-summary.mjs.
         run: |
+          set -o pipefail
+          mkdir -p "reports/pmp-${REPORT_KIND}"
           if [ "$REPORT_KIND" = "regression" ]; then
-            npm run bdd:all
+            npm run bdd:all 2>&1 | tee "reports/pmp-${REPORT_KIND}/run.log"
           else
-            npm run bdd:p1
+            npm run bdd:p1 2>&1 | tee "reports/pmp-${REPORT_KIND}/run.log"
           fi
+
+      - name: Record end time
+        id: ended
+        if: always()
+        run: echo "at=$(date -u +%Y-%m-%dT%H:%M:%SZ)" >> "$GITHUB_OUTPUT"
 
       - name: Generate Allure report
         if: always()
@@ -110,8 +124,10 @@ jobs:
           path: |
             reports/pmp-smoke/allure-report/
             reports/pmp-smoke/cucumber/
+            reports/pmp-smoke/run.log
             reports/pmp-regression/allure-report/
             reports/pmp-regression/cucumber/
+            reports/pmp-regression/run.log
 
       - name: Upload report for GitHub Pages
         if: always() && steps.report_status.outputs.ready == 'true'
@@ -127,6 +143,8 @@ jobs:
     permissions:
       pages: write
       id-token: write
+    outputs:
+      page_url: ${{ steps.deployment.outputs.page_url }}
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
@@ -134,3 +152,62 @@ jobs:
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v5
+
+  # Posts the run summary to Slack #qa-test-report after the Allure report is live, so its button opens this run.
+  # Needs the SLACK_WEBHOOK_URL secret (an Incoming Webhook bound to #qa-test-report); skipped when it is not set.
+  notify-slack:
+    name: Notify Slack
+    needs: [regression, publish-report]
+    if: always() && needs.regression.result != 'cancelled'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      actions: read
+    env:
+      REPORT_KIND: ${{ inputs.suite || (github.event_name == 'schedule' && 'regression' || 'smoke') }}
+      SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+    steps:
+      - name: Check Slack webhook
+        id: webhook
+        run: |
+          if [ -n "$SLACK_WEBHOOK_URL" ]; then
+            echo 'set=true' >> "$GITHUB_OUTPUT"
+          else
+            echo '::notice::SLACK_WEBHOOK_URL is not set; skipping the Slack report.'
+          fi
+
+      - name: Check out repository
+        if: steps.webhook.outputs.set == 'true'
+        uses: actions/checkout@v5
+
+      - name: Set up Node.js
+        if: steps.webhook.outputs.set == 'true'
+        uses: actions/setup-node@v5
+        with:
+          node-version: 26.13.0
+
+      # Missing when the run stopped before any report; the summary then says NO RESULTS.
+      - name: Download test reports
+        if: steps.webhook.outputs.set == 'true'
+        continue-on-error: true
+        uses: actions/download-artifact@v6
+        with:
+          name: pmp-automation-test-${{ github.run_number }}
+          path: reports
+
+      - name: Build Slack message
+        if: steps.webhook.outputs.set == 'true'
+        env:
+          PAGES_URL: ${{ needs.publish-report.outputs.page_url }}
+          RUN_STARTED_AT: ${{ needs.regression.outputs.started_at }}
+          RUN_ENDED_AT: ${{ needs.regression.outputs.ended_at }}
+          COMMIT_MESSAGE: ${{ github.event.head_commit.message || github.event.pull_request.title }}
+        run: |
+          if [ -n "$COMMIT_MESSAGE" ]; then export COMMIT_TITLE="$(printf '%s\n' "$COMMIT_MESSAGE" | head -n 1)"; fi
+          node tools/ci-summary.mjs --text
+          node tools/ci-summary.mjs --out slack.json
+
+      - name: Post to Slack
+        if: steps.webhook.outputs.set == 'true'
+        run: |
+          curl -sS --fail-with-body -X POST -H 'Content-Type: application/json' --data @slack.json "$SLACK_WEBHOOK_URL"
